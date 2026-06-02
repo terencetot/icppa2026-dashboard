@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ICPPA 2026 — Abstract Review Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ── RESET & BASE ─────────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:      #0B1D3A;
+  --navy-mid:  #122342;
+  --navy-soft: #1A3461;
+  --blue:      #1C6EF2;
+  --blue-lt:   #4D94FF;
+  --gold:      #F5A623;
+  --gold-lt:   #FFD580;
+  --emerald:   #0E9F6E;
+  --amber:     #D97706;
+  --rose:      #DC2626;
+  --bg:        #F0F4FA;
+  --surface:   #FFFFFF;
+  --border:    #E2E8F4;
+  --text:      #0F172A;
+  --text-2:    #475569;
+  --text-3:    #94A3B8;
+  --shadow-sm: 0 1px 3px rgba(15,23,42,.06), 0 1px 2px rgba(15,23,42,.04);
+  --shadow:    0 4px 16px rgba(15,23,42,.08), 0 1px 4px rgba(15,23,42,.05);
+  --shadow-lg: 0 12px 40px rgba(15,23,42,.12), 0 4px 12px rgba(15,23,42,.06);
+  --radius:    12px;
+  --radius-sm: 8px;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh;}
+
+/* ── HEADER ───────────────────────────────────────────────── */
+.site-header{
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-soft) 60%, #1E4A8A 100%);
+  padding: 0 40px;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 24px rgba(0,0,0,.35);
+}
+.header-inner{
+  max-width: 1680px; margin: 0 auto;
+  display: flex; align-items: center; gap: 24px;
+  height: 72px;
+}
+.header-logo{
+  width: 46px; height: 46px; border-radius: 10px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--gold) 0%, #E8930A 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 13px; color: var(--navy); letter-spacing: -.3px;
+  box-shadow: 0 0 0 3px rgba(245,166,35,.25);
+}
+.header-title h1{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.3px;line-height:1.2;}
+.header-title p{font-size:12px;color:rgba(255,255,255,.55);margin-top:1px;font-weight:400;}
+.header-sep{width:1px;height:36px;background:rgba(255,255,255,.12);margin-left:8px;}
+.header-badge{
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);
+  border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;
+  color:rgba(255,255,255,.75);white-space:nowrap;
+}
+.header-meta{margin-left:auto;text-align:right;}
+.header-meta .date{font-size:11px;color:rgba(255,255,255,.45);}
+.header-meta .counts{font-size:12px;font-weight:700;color:rgba(255,255,255,.85);margin-top:1px;}
+.progress-strip{
+  height:3px;background:rgba(255,255,255,.08);
+  position:relative;overflow:hidden;
+}
+.progress-strip-fill{
+  position:absolute;inset:0 auto 0 0;
+  width:87%;
+  background:linear-gradient(90deg,var(--gold),var(--blue-lt));
+  border-radius:0 2px 2px 0;
+}
+
+/* ── FILTER BAR ───────────────────────────────────────────── */
+.filter-bar{
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:0 40px;
+  box-shadow:var(--shadow-sm);
+}
+.filter-inner{
+  max-width:1680px;margin:0 auto;
+  display:flex;align-items:center;gap:8px;height:52px;flex-wrap:wrap;
+  padding:8px 0;
+}
+.filter-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-3);margin-right:2px;}
+.filter-select{
+  height:32px;padding:0 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  font-size:12px;font-weight:500;font-family:'Inter',sans-serif;
+  background:#F8FAFC;color:var(--text);cursor:pointer;outline:none;
+  transition:border-color .15s;min-width:120px;
+}
+.filter-select:focus{border-color:var(--blue);}
+.filter-divider{width:1px;height:20px;background:var(--border);margin:0 4px;}
+.btn-reset{
+  margin-left:auto;height:32px;padding:0 14px;border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);background:#fff;color:var(--text-2);
+  font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;
+  transition:all .15s;display:flex;align-items:center;gap:5px;
+}
+.btn-reset:hover{border-color:var(--blue);color:var(--blue);background:#EEF4FF;}
+
+/* ── MAIN ─────────────────────────────────────────────────── */
+main{max-width:1680px;margin:0 auto;padding:28px 40px 48px;}
+
+/* ── KPI STRIP ────────────────────────────────────────────── */
+.kpi-strip{display:grid;grid-template-columns:repeat(8,1fr);gap:12px;margin-bottom:24px;}
+.kpi-card{
+  background:var(--surface);border-radius:var(--radius);
+  padding:16px 18px 14px;box-shadow:var(--shadow-sm);
+  border:1px solid var(--border);position:relative;overflow:hidden;
+  transition:box-shadow .2s, transform .2s;cursor:default;
+}
+.kpi-card:hover{box-shadow:var(--shadow);transform:translateY(-2px);}
+.kpi-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  border-radius:var(--radius) var(--radius) 0 0;
+}
+.kpi-card.c-blue::before{background:linear-gradient(90deg,var(--blue),var(--blue-lt));}
+.kpi-card.c-emerald::before{background:linear-gradient(90deg,var(--emerald),#34D399);}
+.kpi-card.c-gold::before{background:linear-gradient(90deg,var(--gold),var(--gold-lt));}
+.kpi-card.c-amber::before{background:linear-gradient(90deg,var(--amber),#FCD34D);}
+.kpi-card.c-rose::before{background:linear-gradient(90deg,var(--rose),#F87171);}
+.kpi-card.c-purple::before{background:linear-gradient(90deg,#7C3AED,#A78BFA);}
+.kpi-icon{
+  width:32px;height:32px;border-radius:8px;margin-bottom:10px;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+}
+.c-blue   .kpi-icon{background:#EEF4FF;}
+.c-emerald .kpi-icon{background:#ECFDF5;}
+.c-gold   .kpi-icon{background:#FFFBEB;}
+.c-amber  .kpi-icon{background:#FFF7ED;}
+.c-rose   .kpi-icon{background:#FEF2F2;}
+.c-purple .kpi-icon{background:#F5F3FF;}
+.kpi-value{font-size:26px;font-weight:800;color:var(--text);letter-spacing:-1px;line-height:1;}
+.kpi-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);margin-top:5px;}
+.kpi-sub{font-size:11px;color:var(--text-2);margin-top:3px;}
+.kpi-pill{
+  display:inline-flex;align-items:center;gap:3px;margin-top:4px;
+  padding:1px 7px;border-radius:20px;font-size:10px;font-weight:700;
+}
+.pill-green{background:#DCFCE7;color:#166534;}
+.pill-amber{background:#FEF3C7;color:#92400E;}
+.pill-red{background:#FEE2E2;color:#991B1B;}
+.pill-blue{background:#DBEAFE;color:#1E40AF;}
+
+/* ── CHART SECTION ────────────────────────────────────────── */
+.charts-grid{display:grid;grid-template-columns:2fr 1.1fr 1.1fr;gap:16px;margin-bottom:24px;}
+.chart-card{
+  background:var(--surface);border-radius:var(--radius);padding:20px 22px;
+  box-shadow:var(--shadow-sm);border:1px solid var(--border);
+}
+.chart-card h3{
+  font-size:13px;font-weight:700;color:var(--text);letter-spacing:-.2px;
+  display:flex;align-items:center;gap:8px;margin-bottom:4px;
+}
+.chart-card h3 .ch-icon{
+  width:24px;height:24px;border-radius:6px;background:#EEF4FF;
+  display:flex;align-items:center;justify-content:center;font-size:13px;
+}
+.chart-sub{font-size:11px;color:var(--text-3);margin-bottom:14px;}
+.chart-wrap{position:relative;height:200px;}
+
+/* ── TABS ─────────────────────────────────────────────────── */
+.tab-nav{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;}
+.tab-btn{
+  padding:10px 20px;border:none;background:none;font-family:'Inter',sans-serif;
+  font-size:13px;font-weight:600;color:var(--text-3);cursor:pointer;
+  position:relative;border-bottom:2px solid transparent;margin-bottom:-2px;
+  transition:color .15s;white-space:nowrap;
+}
+.tab-btn::after{
+  content:'';position:absolute;bottom:-2px;left:0;right:0;height:2px;
+  background:var(--blue);border-radius:2px 2px 0 0;opacity:0;transition:opacity .15s;
+}
+.tab-btn.active{color:var(--blue);}
+.tab-btn.active::after{opacity:1;}
+.tab-btn:hover:not(.active){color:var(--text-2);}
+.tab-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  margin-left:5px;width:18px;height:18px;border-radius:9px;
+  background:#EEF4FF;color:var(--blue);font-size:10px;font-weight:700;
+}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+/* ── TABLE CARD ───────────────────────────────────────────── */
+.data-card{
+  background:var(--surface);border-radius:var(--radius);padding:0;
+  box-shadow:var(--shadow-sm);border:1px solid var(--border);overflow:hidden;
+}
+.data-card-head{
+  padding:16px 20px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);background:#FAFBFE;
+}
+.data-card-head h3{font-size:14px;font-weight:700;color:var(--text);letter-spacing:-.2px;}
+.data-card-head .head-right{display:flex;align-items:center;gap:8px;}
+.search-input{
+  height:32px;padding:0 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  font-size:12px;font-family:'Inter',sans-serif;outline:none;width:200px;
+  transition:border-color .15s;color:var(--text);background:#fff;
+}
+.search-input:focus{border-color:var(--blue);}
+.table-wrap{overflow-x:auto;max-height:520px;overflow-y:auto;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+thead th{
+  background:var(--navy);color:rgba(255,255,255,.85);
+  padding:10px 14px;text-align:left;font-weight:600;font-size:11px;
+  text-transform:uppercase;letter-spacing:.5px;
+  position:sticky;top:0;z-index:10;white-space:nowrap;
+}
+thead th.sortable{cursor:pointer;user-select:none;}
+thead th.sortable:hover{background:#1A3461;color:#fff;}
+thead th .sort-icon{opacity:.4;margin-left:3px;font-size:10px;}
+thead th.asc .sort-icon::after{content:'↑';opacity:1;}
+thead th.desc .sort-icon::after{content:'↓';opacity:1;}
+thead th:not(.asc):not(.desc) .sort-icon::after{content:'⇅';}
+tbody tr{border-bottom:1px solid #F1F5F9;transition:background .1s;}
+tbody tr:hover{background:#F5F8FF;}
+tbody tr:last-child{border-bottom:none;}
+tbody td{padding:9px 14px;vertical-align:middle;}
+.table-info{
+  padding:10px 20px;font-size:11px;color:var(--text-3);
+  border-top:1px solid var(--border);background:#FAFBFE;
+}
+
+/* ── SCORE BAR ────────────────────────────────────────────── */
+.score-cell{display:flex;align-items:center;gap:8px;}
+.score-track{
+  width:70px;height:6px;border-radius:3px;background:#E8EDF5;
+  flex-shrink:0;overflow:hidden;
+}
+.score-fill{height:100%;border-radius:3px;}
+.score-num{font-weight:700;font-size:13px;min-width:28px;}
+
+/* ── DOTS ─────────────────────────────────────────────────── */
+.rev-dots{display:flex;gap:4px;align-items:center;}
+.rev-dot{width:10px;height:10px;border-radius:50%;}
+.rev-dot.done{background:var(--emerald);}
+.rev-dot.empty{background:#E2E8F4;border:1.5px solid #C5D0E0;}
+
+/* ── BADGES ───────────────────────────────────────────────── */
+.badge{
+  display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;
+}
+.badge-green{background:#DCFCE7;color:#166534;}
+.badge-amber{background:#FEF3C7;color:#92400E;}
+.badge-red{background:#FEE2E2;color:#991B1B;}
+.badge-blue{background:#DBEAFE;color:#1E40AF;}
+.badge-purple{background:#EDE9FE;color:#5B21B6;}
+.badge-gold{background:#FEF3C7;color:#78350F;}
+.badge-slate{background:#F1F5F9;color:#475569;}
+
+/* ── RANK ─────────────────────────────────────────────────── */
+.rank-cell{display:flex;align-items:center;gap:6px;}
+.rank-num{
+  width:26px;height:26px;border-radius:6px;display:flex;align-items:center;
+  justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;
+}
+.rank-1{background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;}
+.rank-2{background:linear-gradient(135deg,#94A3B8,#64748B);color:#fff;}
+.rank-3{background:linear-gradient(135deg,#D97706,#B45309);color:#fff;}
+.rank-n{background:#F1F5F9;color:var(--text-2);}
+
+/* ── REVIEWER GRID ────────────────────────────────────────── */
+.rev-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:20px;}
+.rev-card{
+  background:#fff;border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px 18px;position:relative;overflow:hidden;
+  transition:box-shadow .2s,transform .2s;
+}
+.rev-card:hover{box-shadow:var(--shadow);transform:translateY(-2px);}
+.rev-card::after{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:var(--radius) 0 0 var(--radius);
+}
+.rev-card.complete::after{background:var(--emerald);}
+.rev-card.partial::after{background:var(--amber);}
+.rev-card.critical::after{background:var(--rose);}
+.rev-card.pdf::after{background:var(--gold);}
+.rev-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
+.rev-name{font-size:13px;font-weight:700;color:var(--text);line-height:1.3;}
+.rev-tag{margin-top:2px;}
+.rev-stats-row{display:flex;gap:14px;margin-bottom:10px;}
+.rev-stat{display:flex;flex-direction:column;}
+.rev-stat-val{font-size:18px;font-weight:800;color:var(--text);letter-spacing:-.5px;line-height:1;}
+.rev-stat-label{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;margin-top:2px;}
+.rev-progress{height:6px;border-radius:3px;background:#E8EDF5;overflow:hidden;}
+.rev-progress-fill{height:100%;border-radius:3px;transition:width .6s ease;}
+.rev-progress-fill.c-green{background:linear-gradient(90deg,var(--emerald),#34D399);}
+.rev-progress-fill.c-amber{background:linear-gradient(90deg,var(--amber),#FCD34D);}
+.rev-progress-fill.c-red{background:linear-gradient(90deg,var(--rose),#F87171);}
+.rev-progress-fill.c-gold{background:linear-gradient(90deg,var(--gold),var(--gold-lt));}
+.rev-pct{font-size:10px;font-weight:700;color:var(--text-3);margin-top:4px;text-align:right;}
+
+/* ── COI NOTE ─────────────────────────────────────────────── */
+.coi-banner{
+  background:#FFFBEB;border:1px solid #FDE68A;border-radius:var(--radius-sm);
+  padding:10px 14px;display:flex;align-items:flex-start;gap:8px;
+  margin-bottom:16px;font-size:12px;color:#78350F;line-height:1.5;
+}
+.coi-banner .coi-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+
+/* ── Z INTERP ─────────────────────────────────────────────── */
+.z-val{font-weight:800;font-size:13px;}
+.z-pos{color:var(--emerald);}
+.z-neg{color:var(--rose);}
+
+/* ── PRIORITY STRIP ───────────────────────────────────────── */
+.priority-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;}
+.pd-critical{background:var(--rose);box-shadow:0 0 0 2px rgba(220,38,38,.2);}
+.pd-urgent{background:var(--amber);}
+.pd-normal{background:var(--emerald);}
+
+/* ── RESPONSIVE ───────────────────────────────────────────── */
+@media(max-width:1280px){
+  .kpi-strip{grid-template-columns:repeat(4,1fr);}
+  .charts-grid{grid-template-columns:1fr 1fr;}
+  .charts-grid .chart-card:first-child{grid-column:1/-1;}
+}
+@media(max-width:900px){
+  .kpi-strip{grid-template-columns:repeat(2,1fr);}
+  .charts-grid{grid-template-columns:1fr;}
+  main{padding:16px 20px;}
+  .filter-bar,.site-header{padding-left:20px;padding-right:20px;}
+}
+
+/* ── SCROLLBAR ────────────────────────────────────────────── */
+.table-wrap::-webkit-scrollbar{width:5px;height:5px;}
+.table-wrap::-webkit-scrollbar-track{background:#F1F5F9;}
+.table-wrap::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══════════════════════════════════════════════ -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-logo">ICPPA</div>
+    <div class="header-title">
+      <h1>Abstract Review Dashboard</h1>
+      <p>International Conference on PEN-Plus in Africa &nbsp;·&nbsp; 2026</p>
+    </div>
+    <div class="header-sep"></div>
+    <span class="header-badge">&#128196; 141 Abstracts</span>
+    <span class="header-badge">&#128101; 13 Reviewers</span>
+    <span class="header-badge">&#9989; 87% Progress</span>
+    <div class="header-meta">
+      <div class="date">Generated · June 3, 2026</div>
+      <div class="counts">367 reviews &nbsp;·&nbsp; avg 14.53/20</div>
+    </div>
+  </div>
+  <div class="progress-strip"><div class="progress-strip-fill"></div></div>
+</header>
+
+<!-- ══ FILTER BAR ══════════════════════════════════════════ -->
+<div class="filter-bar">
+  <div class="filter-inner">
+    <span class="filter-label">Filter by</span>
+    <select class="filter-select" id="fGender" onchange="applyFilters()">
+      <option value="">All genders</option>
+      <option value="Male">Male</option>
+      <option value="Female">Female</option>
+    </select>
+    <select class="filter-select" id="fLang" onchange="applyFilters()">
+      <option value="">All languages</option>
+      <option value="English">English</option>
+      <option value="French">French</option>
+    </select>
+    <select class="filter-select" id="fComplete" onchange="applyFilters()">
+      <option value="">All review counts</option>
+      <option value="3">3 reviews (complete)</option>
+      <option value="2">2 reviews</option>
+      <option value="1">1 review</option>
+    </select>
+    <select class="filter-select" id="fScoreMin" onchange="applyFilters()">
+      <option value="0">All scores</option>
+      <option value="14">Score &ge; 14</option>
+      <option value="16">Score &ge; 16</option>
+      <option value="18">Score &ge; 18</option>
+    </select>
+    <div class="filter-divider"></div>
+    <button class="btn-reset" onclick="resetFilters()">&#8635; Reset</button>
+  </div>
+</div>
+
+<!-- ══ MAIN ════════════════════════════════════════════════ -->
+<main>
+
+<!-- KPI STRIP -->
+<div class="kpi-strip">
+  <div class="kpi-card c-blue">
+    <div class="kpi-icon">&#128196;</div>
+    <div class="kpi-value" id="kTotal" data-target="141">0</div>
+    <div class="kpi-label">Abstracts</div>
+    <div class="kpi-sub">133 English &middot; 8 French</div>
+  </div>
+  <div class="kpi-card c-emerald">
+    <div class="kpi-icon">&#9989;</div>
+    <div class="kpi-value" id="kDone" data-target="367">0</div>
+    <div class="kpi-label">Reviews Done</div>
+    <span class="kpi-pill pill-green">87% of target</span>
+  </div>
+  <div class="kpi-card c-emerald">
+    <div class="kpi-icon">&#127941;</div>
+    <div class="kpi-value" id="kComplete" data-target="93">0</div>
+    <div class="kpi-label">Fully Reviewed</div>
+    <span class="kpi-pill pill-green" id="kCompletePct">66% of abstracts</span>
+  </div>
+  <div class="kpi-card c-amber">
+    <div class="kpi-icon">&#9203;</div>
+    <div class="kpi-value" id="kNeed1" data-target="38">0</div>
+    <div class="kpi-label">Need 1 Review</div>
+    <div class="kpi-sub">2 reviews received</div>
+  </div>
+  <div class="kpi-card c-rose">
+    <div class="kpi-icon">&#9888;</div>
+    <div class="kpi-value" id="kNeed2" data-target="10">0</div>
+    <div class="kpi-label">Need 2+ Reviews</div>
+    <div class="kpi-sub">0 – 1 review received</div>
+  </div>
+  <div class="kpi-card c-gold">
+    <div class="kpi-icon">&#11088;</div>
+    <div class="kpi-value" id="kAvg">14.53</div>
+    <div class="kpi-label">Global Avg Score</div>
+    <div class="kpi-sub">out of 20 points</div>
+  </div>
+  <div class="kpi-card c-purple">
+    <div class="kpi-icon">&#128101;</div>
+    <div class="kpi-value">5<span style="font-size:16px;color:var(--text-3)">/13</span></div>
+    <div class="kpi-label">Reviewers Done</div>
+    <div class="kpi-sub">Boni, Boudreaux, MUKARA&hellip;</div>
+  </div>
+  <div class="kpi-card c-blue">
+    <div class="kpi-icon">&#127758;</div>
+    <div class="kpi-value">58</div>
+    <div class="kpi-label">Countries</div>
+    <div class="kpi-sub">Tanzania &middot; Uganda &middot; Kenya</div>
+  </div>
+</div>
+
+<!-- CHARTS -->
+<div class="charts-grid">
+  <div class="chart-card">
+    <h3><span class="ch-icon">&#128202;</span> Score Distribution (Mean /20)</h3>
+    <p class="chart-sub">Number of abstracts per score range</p>
+    <div class="chart-wrap"><canvas id="chartDist"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <h3><span class="ch-icon">&#9711;</span> Review Completion</h3>
+    <p class="chart-sub">Abstracts by number of reviews received</p>
+    <div class="chart-wrap"><canvas id="chartDone"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <h3><span class="ch-icon">&#128101;</span> Gender &amp; Language</h3>
+    <p class="chart-sub">Author demographics</p>
+    <div class="chart-wrap"><canvas id="chartDemo"></canvas></div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('tabScore',this)">
+    Abstract Rankings <span class="tab-badge" id="badgeScore">—</span>
+  </button>
+  <button class="tab-btn" onclick="showTab('tabZscore',this)">
+    Standardized Scores (Z)
+  </button>
+  <button class="tab-btn" onclick="showTab('tabRev',this)">
+    Reviewers
+  </button>
+  <button class="tab-btn" onclick="showTab('tabMiss',this)">
+    Incomplete Reviews <span class="tab-badge" id="badgeMiss">—</span>
+  </button>
+</div>
+
+<!-- TAB: RANKINGS -->
+<div id="tabScore" class="tab-content active">
+<div class="data-card">
+  <div class="data-card-head">
+    <h3>&#127942; Rankings by Mean Score</h3>
+    <div class="head-right">
+      <input class="search-input" type="text" id="searchS" placeholder="&#128269;  Search author, country, domain…" oninput="renderS()">
+    </div>
+  </div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr>
+      <th>Rank</th>
+      <th>ID</th>
+      <th>Author</th>
+      <th>G</th>
+      <th>Country</th>
+      <th>Language</th>
+      <th>Domain</th>
+      <th class="sortable" onclick="sortS('nb_reviews',this)">Reviews <span class="sort-icon"></span></th>
+      <th class="sortable" onclick="sortS('mean',this)">Score /20 <span class="sort-icon"></span></th>
+      <th>Min</th><th>Max</th><th>&sigma;</th>
+    </tr></thead>
+    <tbody id="tbS"></tbody>
+  </table>
+  </div>
+  <div class="table-info" id="infoS"></div>
+</div>
+</div>
+
+<!-- TAB: Z-SCORE -->
+<div id="tabZscore" class="tab-content">
+<div class="data-card">
+  <div class="data-card-head">
+    <h3>&#128200; Standardized Scores &nbsp;<span style="font-size:11px;font-weight:400;color:var(--text-3)">Z = (mean &minus; &mu;) / &sigma; &nbsp;&middot;&nbsp; identifies statistical outliers</span></h3>
+  </div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr>
+      <th>Rank</th><th>Z Rank</th><th>ID</th><th>Author</th><th>Country</th>
+      <th class="sortable" onclick="sortZ('nb_reviews',this)">Reviews <span class="sort-icon"></span></th>
+      <th class="sortable" onclick="sortZ('mean',this)">Score /20 <span class="sort-icon"></span></th>
+      <th class="sortable" onclick="sortZ('z_score',this)">Z-Score <span class="sort-icon"></span></th>
+      <th>Interpretation</th>
+    </tr></thead>
+    <tbody id="tbZ"></tbody>
+  </table>
+  </div>
+</div>
+</div>
+
+<!-- TAB: REVIEWERS -->
+<div id="tabRev" class="tab-content">
+<div class="coi-banner">
+  <span class="coi-icon">&#9888;&#65039;</span>
+  <span><strong>Conflict of Interest — Ramaiya Kaushik:</strong> Abstracts 31, 83, 143, 144 were not scored (declared CoI, not an oversight). His remaining 29 reviews were submitted via PDF and are fully integrated.</span>
+</div>
+<div class="rev-grid" id="revGrid"></div>
+<div class="data-card">
+  <div class="data-card-head"><h3>&#128202; Reviewer Statistics</h3></div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr>
+      <th>Reviewer</th><th>Reviews Completed</th><th>Allocation</th>
+      <th>Completion</th><th>Mean Score Given</th><th>Std Dev</th><th>Scoring Profile</th>
+    </tr></thead>
+    <tbody id="tbRev"></tbody>
+  </table>
+  </div>
+</div>
+</div>
+
+<!-- TAB: INCOMPLETE -->
+<div id="tabMiss" class="tab-content">
+<div class="data-card">
+  <div class="data-card-head"><h3>&#9203; Abstracts Without 3 Reviews</h3></div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr>
+      <th>ID</th><th>Author</th><th>G</th><th>Country</th><th>Language</th>
+      <th>Received</th><th>Missing</th><th>Current Score</th><th>Priority</th>
+    </tr></thead>
+    <tbody id="tbMiss"></tbody>
+  </table>
+  </div>
+</div>
+</div>
+
+</main>
+
+<script>
+
+const STATS = {"total_abstracts": 141, "total_reviews": 367, "complete_3": 93, "need_1": 38, "need_2": 9, "need_3": 1, "avg_score": 14.53, "total_en": 133, "total_fr": 8, "gender_m": 78, "gender_f": 63, "reviewers_complete": 5, "kaushik_coi": [31, 83, 143, 144]};
+const ABSTRACTS = [{"id": 132, "rank": 1, "author": "Salmane A. Amidou", "gender": "Male", "country": "Bénin", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 1, "mean": 20.0, "min": 20.0, "max": 20.0, "std": 0.0, "z_score": 1.984}, {"id": 59, "rank": 2, "author": "George Msengi", "gender": "Male", "country": "Tanzania", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 19.0, "min": 19.0, "max": 19.0, "std": 0.0, "z_score": 1.631}, {"id": 115, "rank": 3, "author": "Lulu Tian", "gender": "Female", "country": "United States of America", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 18.67, "min": 18.0, "max": 20.0, "std": 1.15, "z_score": 1.515}, {"id": 41, "rank": 4, "author": "Avelina Mgasa", "gender": "Female", "country": "Tanzania", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 18.5, "min": 17.5, "max": 20.0, "std": 1.32, "z_score": 1.455}, {"id": 49, "rank": 5, "author": "Bezanesh Melese Masresha", "gender": "Female", "country": "Ethiopia", "language": "English", "domain": "C.\tRheumatic Heart Disease (RHD)", "nb_reviews": 3, "mean": 18.33, "min": 15.0, "max": 20.0, "std": 2.89, "z_score": 1.395}, {"id": 65, "rank": 6, "author": "Thamsanqa Ncube", "gender": "Male", "country": "Zimbabwe", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 18.0, "min": 16.0, "max": 19.0, "std": 1.73, "z_score": 1.279}, {"id": 107, "rank": 7, "author": "Nere Otubu", "gender": "Male", "country": "Nigeria ", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 18.0, "min": 17.0, "max": 19.0, "std": 1.0, "z_score": 1.279}, {"id": 123, "rank": 8, "author": "Edna S. Majaliwa", "gender": "Female", "country": "Tanzania", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 18.0, "min": 17.0, "max": 19.0, "std": 1.0, "z_score": 1.279}, {"id": 56, "rank": 9, "author": "Abdulkarim Mbaraka", "gender": "Male", "country": "Tanzania", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 2, "mean": 17.5, "min": 15.0, "max": 20.0, "std": 3.54, "z_score": 1.103}, {"id": 11, "rank": 10, "author": "Nicholas Bari Ndahura", "gender": "Male", "country": "Uganda", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 17.33, "min": 15.0, "max": 19.0, "std": 2.08, "z_score": 1.043}, {"id": 18, "rank": 11, "author": "Damilola Titilayo Fajinmi ", "gender": "Female", "country": "Nigeria ", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 17.33, "min": 16.0, "max": 20.0, "std": 2.31, "z_score": 1.043}, {"id": 102, "rank": 12, "author": "Justice Mudavanhu", "gender": "Male", "country": "Zimbabwe", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 17.33, "min": 15.0, "max": 19.0, "std": 2.08, "z_score": 1.043}, {"id": 21, "rank": 13, "author": "Simon Pierre BONI", "gender": "Male", "country": "Côte d'Ivoire", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 3, "mean": 17.33, "min": 15.0, "max": 19.0, "std": 2.08, "z_score": 1.043}, {"id": 117, "rank": 14, "author": "Bavin Mulenga", "gender": "Male", "country": "Zambia", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 3, "mean": 17.33, "min": 16.0, "max": 19.0, "std": 1.53, "z_score": 1.043}, {"id": 43, "rank": 15, "author": "Jamesetta T. Smith", "gender": "Female", "country": "Liberia", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 4, "mean": 17.25, "min": 16.0, "max": 20.0, "std": 1.89, "z_score": 1.015}, {"id": 63, "rank": 16, "author": "Charmaine Chivandire-Kanjanga", "gender": "Female", "country": "Zimbabwe", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 3, "mean": 17.0, "min": 12.0, "max": 20.0, "std": 4.36, "z_score": 0.927}, {"id": 108, "rank": 17, "author": "David Orojo", "gender": "Male", "country": "Nigeria ", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 17.0, "min": 13.0, "max": 19.0, "std": 3.46, "z_score": 0.927}, {"id": 86, "rank": 18, "author": "Josephat Kamugisha", "gender": "Male", "country": "Tanzania ", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 2, "mean": 17.0, "min": 15.0, "max": 19.0, "std": 2.83, "z_score": 0.927}, {"id": 139, "rank": 19, "author": "Judith Namuyonga", "gender": "Female", "country": "Uganda", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 1, "mean": 17.0, "min": 17.0, "max": 17.0, "std": 0.0, "z_score": 0.927}, {"id": 120, "rank": 20, "author": "Kalubi Kalenga", "gender": "Male", "country": "Zambia", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 2, "mean": 17.0, "min": 14.0, "max": 20.0, "std": 4.24, "z_score": 0.927}, {"id": 38, "rank": 21, "author": "YOLANDA CARINA FERNANDES MARCELINO SABINO", "gender": "Female", "country": "MOCAMBIQUE", "language": "English", "domain": "C.\tRheumatic Heart Disease (RHD)", "nb_reviews": 3, "mean": 17.0, "min": 15.0, "max": 19.0, "std": 2.0, "z_score": 0.927}, {"id": 126, "rank": 22, "author": "Anthony Bless Dogbedo ", "gender": "Male", "country": "Ghana", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 2, "mean": 17.0, "min": 17.0, "max": 17.0, "std": 0.0, "z_score": 0.927}, {"id": 51, "rank": 23, "author": "Dr Elisha Osati", "gender": "Male", "country": "United Republic of Tanzania", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 17.0, "min": 16.0, "max": 19.0, "std": 1.73, "z_score": 0.927}, {"id": 61, "rank": 24, "author": "Ablo Prudence Wachinou", "gender": "Male", "country": "Bénin", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 17.0, "min": 14.0, "max": 20.0, "std": 3.0, "z_score": 0.927}, {"id": 35, "rank": 25, "author": "Dorothy Carolyne Mabunde", "gender": "Female", "country": "kenya", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 17.0, "min": 14.0, "max": 20.0, "std": 3.0, "z_score": 0.927}, {"id": 124, "rank": 26, "author": "Tarun Pathak", "gender": "Male", "country": "India", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 16.83, "min": 14.5, "max": 20.0, "std": 2.84, "z_score": 0.867}, {"id": 5, "rank": 27, "author": "SAIZONOU Guigo Jonas Christian", "gender": "Male", "country": "Benin", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 16.67, "min": 16.0, "max": 18.0, "std": 1.15, "z_score": 0.81}, {"id": 135, "rank": 28, "author": "Abdihakim Mohamoud Mohamed", "gender": "Male", "country": "Hargeisa Group Hospital", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 3, "mean": 16.67, "min": 13.0, "max": 20.0, "std": 3.51, "z_score": 0.81}, {"id": 58, "rank": 29, "author": "Vivian Nwakolobi", "gender": "Female", "country": "Nigeria", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 16.67, "min": 14.0, "max": 18.0, "std": 2.31, "z_score": 0.81}, {"id": 50, "rank": 30, "author": "Bezanesh Melese Masresha", "gender": "Female", "country": "Ethiopia", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 16.67, "min": 15.0, "max": 18.0, "std": 1.53, "z_score": 0.81}, {"id": 121, "rank": 31, "author": "Surbhi Garg", "gender": "Female", "country": "India", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 16.67, "min": 13.0, "max": 19.0, "std": 3.21, "z_score": 0.81}, {"id": 140, "rank": 32, "author": "Dr Sarah Asio", "gender": "Female", "country": "Uganda", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 16.67, "min": 13.0, "max": 19.0, "std": 3.21, "z_score": 0.81}, {"id": 40, "rank": 33, "author": "Tomarleen J. Collins ", "gender": "Female", "country": "Liberia", "language": "English", "domain": "C.\tRheumatic Heart Disease (RHD)", "nb_reviews": 3, "mean": 16.67, "min": 15.0, "max": 19.0, "std": 2.08, "z_score": 0.81}, {"id": 24, "rank": 34, "author": "BALIDAWA JOHN", "gender": "Male", "country": "UGANDA", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 16.67, "min": 16.0, "max": 17.0, "std": 0.58, "z_score": 0.81}, {"id": 146, "rank": 35, "author": "Elizabeth H Shayo", "gender": "Female", "country": "Tanzania", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 2, "mean": 16.5, "min": 14.0, "max": 19.0, "std": 3.54, "z_score": 0.75}, {"id": 36, "rank": 36, "author": "Dorothy Carolyne Mabunde", "gender": "Female", "country": "Kenya", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 16.33, "min": 11.0, "max": 20.0, "std": 4.73, "z_score": 0.691}, {"id": 47, "rank": 37, "author": "Hannah Kigamba", "gender": "Female", "country": "Kenya", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 16.33, "min": 14.0, "max": 20.0, "std": 3.21, "z_score": 0.691}, {"id": 9, "rank": 38, "author": "Maryam M. Umar", "gender": "Female", "country": "Australia ", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 16.33, "min": 14.0, "max": 20.0, "std": 3.21, "z_score": 0.691}, {"id": 33, "rank": 39, "author": "Agnes Karingo Karume", "gender": "Female", "country": "Kenya", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 16.33, "min": 10.0, "max": 20.0, "std": 5.51, "z_score": 0.691}, {"id": 34, "rank": 40, "author": "George Awungafac", "gender": "Male", "country": "Sweden", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 16.33, "min": 15.0, "max": 17.0, "std": 1.15, "z_score": 0.691}, {"id": 145, "rank": 41, "author": "Selina Marwa", "gender": "Female", "country": "Kenya", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 16.33, "min": 15.0, "max": 17.0, "std": 1.15, "z_score": 0.691}, {"id": 89, "rank": 42, "author": "Yolanda Carina Fernandes Marcelino Sabino", "gender": "Female", "country": "Mozambique", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 16.33, "min": 14.0, "max": 19.0, "std": 2.52, "z_score": 0.691}, {"id": 112, "rank": 43, "author": "Teresa Mbewe ", "gender": "Female", "country": "Malawi ", "language": "English", "domain": "C.\tRheumatic Heart Disease (RHD)", "nb_reviews": 4, "mean": 16.25, "min": 15.0, "max": 18.0, "std": 1.26, "z_score": 0.662}, {"id": 92, "rank": 44, "author": "Ibrahim Banaru Abubakar", "gender": "Male", "country": "Nigeria", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 2, "mean": 16.0, "min": 12.0, "max": 20.0, "std": 5.66, "z_score": 0.574}, {"id": 75, "rank": 45, "author": "Hassan adan", "gender": "Male", "country": "Kenya", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 2, "mean": 16.0, "min": 14.0, "max": 18.0, "std": 2.83, "z_score": 0.574}, {"id": 96, "rank": 46, "author": "Marta Tilli", "gender": "Female", "country": "Tanzania", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 16.0, "min": 13.0, "max": 18.0, "std": 2.65, "z_score": 0.574}, {"id": 131, "rank": 47, "author": "Salmane A. Amidou", "gender": "Male", "country": "Bénin", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 2, "mean": 16.0, "min": 15.0, "max": 17.0, "std": 1.41, "z_score": 0.574}, {"id": 99, "rank": 48, "author": "Sara Perelli", "gender": "Female", "country": "Italy ", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 16.0, "min": 13.0, "max": 18.0, "std": 2.65, "z_score": 0.574}, {"id": 138, "rank": 49, "author": "Nukhba Zia", "gender": "Female", "country": "Switzerland", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 3, "mean": 16.0, "min": 15.0, "max": 17.0, "std": 1.0, "z_score": 0.574}, {"id": 29, "rank": 50, "author": "Davison Munodawafa", "gender": "Male", "country": "Zimbabwe", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 3, "mean": 16.0, "min": 11.0, "max": 19.0, "std": 4.36, "z_score": 0.574}, {"id": 71, "rank": 51, "author": "Catherine Karekezi ", "gender": "Female", "country": "Kenya", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 4, "mean": 16.0, "min": 15.0, "max": 18.0, "std": 1.41, "z_score": 0.574}, {"id": 110, "rank": 52, "author": "Michael  Adedotun Oke ", "gender": "Male", "country": "Nigeria", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 2, "mean": 16.0, "min": 13.0, "max": 19.0, "std": 4.24, "z_score": 0.574}, {"id": 144, "rank": 53, "author": "RACHEL SAMUEL NUNGU", "gender": "Female", "country": "TANZANIA", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 2, "mean": 15.75, "min": 15.5, "max": 16.0, "std": 0.35, "z_score": 0.486}, {"id": 8, "rank": 54, "author": "Maryam M. Umar", "gender": "Female", "country": "Australia ", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 15.67, "min": 13.0, "max": 18.0, "std": 2.52, "z_score": 0.458}, {"id": 39, "rank": 55, "author": "Theophilus T. Allison", "gender": "Male", "country": "Liberia", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 15.67, "min": 15.0, "max": 16.0, "std": 0.58, "z_score": 0.458}, {"id": 100, "rank": 56, "author": "Nasser Dine Haylaji", "gender": "Male", "country": "Mauritanie ", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 3, "mean": 15.67, "min": 14.0, "max": 17.0, "std": 1.53, "z_score": 0.458}, {"id": 109, "rank": 57, "author": "Oluwatosin Abdulai-Apotieri", "gender": "Female", "country": "Nigeria ", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 15.5, "min": 14.5, "max": 16.0, "std": 0.87, "z_score": 0.398}, {"id": 127, "rank": 58, "author": "Peter Mathias Karoli", "gender": "Male", "country": "Tanzania", "language": "English", "domain": "C.\tRheumatic Heart Disease (RHD)", "nb_reviews": 2, "mean": 15.5, "min": 15.0, "max": 16.0, "std": 0.71, "z_score": 0.398}, {"id": 129, "rank": 59, "author": "Salmane A. AMIDOU", "gender": "Male", "country": "Bénin", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 2, "mean": 15.5, "min": 15.0, "max": 16.0, "std": 0.71, "z_score": 0.398}, {"id": 130, "rank": 60, "author": "AMOUSSA Roukiyath", "gender": "Female", "country": "BENIN", "language": "French", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 2, "mean": 15.5, "min": 15.0, "max": 16.0, "std": 0.71, "z_score": 0.398}, {"id": 55, "rank": 61, "author": "Miriam Lukwago", "gender": "Female", "country": "Uganda ", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 2, "mean": 15.5, "min": 15.0, "max": 16.0, "std": 0.71, "z_score": 0.398}, {"id": 88, "rank": 62, "author": "Martha Jerome ", "gender": "Female", "country": "Tanzania", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 3, "mean": 15.33, "min": 13.0, "max": 18.0, "std": 2.52, "z_score": 0.338}, {"id": 28, "rank": 63, "author": "Davison Munodawafa", "gender": "Male", "country": "Zimbabwe", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 15.33, "min": 13.0, "max": 18.0, "std": 2.52, "z_score": 0.338}, {"id": 52, "rank": 64, "author": "Ivan Luweire", "gender": "Male", "country": "Uganda", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 15.33, "min": 14.0, "max": 17.0, "std": 1.53, "z_score": 0.338}, {"id": 54, "rank": 65, "author": "David Nzigu", "gender": "Male", "country": "Uganda", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 15.33, "min": 13.0, "max": 18.0, "std": 2.52, "z_score": 0.338}, {"id": 53, "rank": 66, "author": "Allan Kiwanuka", "gender": "Male", "country": "Uganda", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 15.33, "min": 13.0, "max": 19.0, "std": 3.21, "z_score": 0.338}, {"id": 70, "rank": 67, "author": "Catherine Akoth", "gender": "Female", "country": "Kenya", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 15.33, "min": 11.0, "max": 19.0, "std": 4.04, "z_score": 0.338}, {"id": 10, "rank": 68, "author": "Medson Boti", "gender": "Male", "country": "Malawi", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 3, "mean": 15.33, "min": 14.0, "max": 18.0, "std": 2.31, "z_score": 0.338}, {"id": 125, "rank": 69, "author": "Deepak Vijayan", "gender": "Male", "country": "India", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 15.33, "min": 13.0, "max": 18.0, "std": 2.52, "z_score": 0.338}, {"id": 26, "rank": 70, "author": "OMI SALAMATOU NGAMBU", "gender": "Female", "country": "CAMEROON", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 3, "mean": 15.33, "min": 14.0, "max": 17.0, "std": 1.53, "z_score": 0.338}, {"id": 105, "rank": 71, "author": "Mario M.J Musonda", "gender": "Male", "country": "Zambia", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 1, "mean": 15.0, "min": 15.0, "max": 15.0, "std": 0.0, "z_score": 0.222}, {"id": 103, "rank": 72, "author": "Evelyn Mwumbe", "gender": "Female", "country": "Tanzania", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 2, "mean": 15.0, "min": 13.0, "max": 17.0, "std": 2.83, "z_score": 0.222}, {"id": 106, "rank": 73, "author": "Dr. Benjamin Demah Nuertey", "gender": "Male", "country": "Ghana", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 2, "mean": 15.0, "min": 15.0, "max": 15.0, "std": 0.0, "z_score": 0.222}, {"id": 68, "rank": 74, "author": "Dr Joan-Paula Bor-Malenya ", "gender": "Female", "country": "Kenya ", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 15.0, "min": 13.0, "max": 17.0, "std": 2.0, "z_score": 0.222}, {"id": 111, "rank": 75, "author": "Dr Asio Sarah", "gender": "Female", "country": "Uganda", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 2, "mean": 15.0, "min": 15.0, "max": 15.0, "std": 0.0, "z_score": 0.222}, {"id": 72, "rank": 76, "author": "Oluwapelumi .O. Okuyemi", "gender": "Female", "country": "Ghana", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 14.67, "min": 12.0, "max": 18.0, "std": 3.06, "z_score": 0.106}, {"id": 30, "rank": 77, "author": "Abdirahman Moallim Ibrahim", "gender": "Male", "country": "Somalia", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 3, "mean": 14.67, "min": 14.0, "max": 15.0, "std": 0.58, "z_score": 0.106}, {"id": 134, "rank": 78, "author": "Namalambo Mwenda Ng'uni", "gender": "Female", "country": "Zambia", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 14.67, "min": 13.0, "max": 16.0, "std": 1.53, "z_score": 0.106}, {"id": 116, "rank": 79, "author": "Federico Mazzinghi", "gender": "Male", "country": "Italy", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 2, "mean": 14.5, "min": 9.0, "max": 20.0, "std": 7.78, "z_score": 0.046}, {"id": 69, "rank": 80, "author": "Catherine Akoth", "gender": "Female", "country": "Kenya", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 2, "mean": 14.5, "min": 13.0, "max": 16.0, "std": 2.12, "z_score": 0.046}, {"id": 64, "rank": 81, "author": "Ablo P. Wachinou", "gender": "Male", "country": "Benin", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 2, "mean": 14.5, "min": 10.0, "max": 19.0, "std": 6.36, "z_score": 0.046}, {"id": 79, "rank": 82, "author": "Renatus Nyarubamba", "gender": "Male", "country": "Tanzania", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 14.33, "min": 12.0, "max": 17.0, "std": 2.52, "z_score": -0.014}, {"id": 98, "rank": 83, "author": "Amina Diba Boru", "gender": "Female", "country": "Kenya", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 14.33, "min": 11.0, "max": 18.0, "std": 3.51, "z_score": -0.014}, {"id": 12, "rank": 84, "author": "Maryam M. Umar ", "gender": "Female", "country": "Australia ", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 14.0, "min": 11.0, "max": 16.0, "std": 2.65, "z_score": -0.13}, {"id": 122, "rank": 85, "author": "Soumya Pancholi", "gender": "Female", "country": "India", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 2, "mean": 14.0, "min": 13.0, "max": 15.0, "std": 1.41, "z_score": -0.13}, {"id": 22, "rank": 86, "author": "Frank E. Kaphesi", "gender": "Male", "country": "Malawi", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 3, "mean": 14.0, "min": 9.0, "max": 17.0, "std": 4.36, "z_score": -0.13}, {"id": 119, "rank": 87, "author": "Max Fraden MD", "gender": "Male", "country": "USA", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 3, "mean": 14.0, "min": 13.0, "max": 15.0, "std": 1.0, "z_score": -0.13}, {"id": 113, "rank": 88, "author": "Richard HOUEZE", "gender": "Male", "country": "BENIN", "language": "French", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 1, "mean": 14.0, "min": 14.0, "max": 14.0, "std": 0.0, "z_score": -0.13}, {"id": 142, "rank": 89, "author": "Simon Otulem", "gender": "Male", "country": "Uganda", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 2, "mean": 14.0, "min": 13.0, "max": 15.0, "std": 1.41, "z_score": -0.13}, {"id": 15, "rank": 90, "author": "Gyesi Razak Issahaku", "gender": "Male", "country": "Ghana", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 14.0, "min": 13.0, "max": 15.0, "std": 1.0, "z_score": -0.13}, {"id": 141, "rank": 91, "author": "Pankaj Bhattarai", "gender": "Male", "country": "Congo", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 3, "mean": 13.67, "min": 8.0, "max": 17.0, "std": 4.93, "z_score": -0.247}, {"id": 45, "rank": 92, "author": "Joe P Davies ", "gender": "Male", "country": "Liberia ", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 13.67, "min": 12.0, "max": 15.0, "std": 1.53, "z_score": -0.247}, {"id": 48, "rank": 93, "author": "ELIA SARUBARE NNKO", "gender": "Male", "country": "Tanzania", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 2, "mean": 13.5, "min": 11.0, "max": 16.0, "std": 3.54, "z_score": -0.307}, {"id": 67, "rank": 94, "author": "Deocrates Dominic", "gender": "Male", "country": "Tanzania", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 13.5, "min": 10.0, "max": 16.5, "std": 3.28, "z_score": -0.307}, {"id": 136, "rank": 95, "author": "Kisa Salubwe", "gender": "Female", "country": "Zambia", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 13.33, "min": 11.0, "max": 15.0, "std": 2.08, "z_score": -0.366}, {"id": 60, "rank": 96, "author": "Dr. Abaden Svisva", "gender": "Male", "country": "Zimbabwe", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 13.33, "min": 8.0, "max": 19.0, "std": 5.51, "z_score": -0.366}, {"id": 66, "rank": 97, "author": "PENINAH SINGURA", "gender": "Female", "country": "UK", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 13.33, "min": 9.0, "max": 17.0, "std": 4.04, "z_score": -0.366}, {"id": 93, "rank": 98, "author": "Giovanni Torelli", "gender": "Male", "country": "Italy", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 13.33, "min": 10.0, "max": 16.0, "std": 3.06, "z_score": -0.366}, {"id": 133, "rank": 99, "author": "Salmane A. Amidou", "gender": "Male", "country": "Bénin", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 13.33, "min": 12.0, "max": 15.0, "std": 1.53, "z_score": -0.366}, {"id": 25, "rank": 100, "author": "Xoliswa Simelane ", "gender": "Female", "country": "South Africa ", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 3, "mean": 13.33, "min": 10.0, "max": 16.0, "std": 3.06, "z_score": -0.366}, {"id": 128, "rank": 101, "author": "Bishnu Banskota", "gender": "Male", "country": "Nepal", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 13.33, "min": 6.0, "max": 20.0, "std": 7.02, "z_score": -0.366}, {"id": 87, "rank": 102, "author": "Judith Namuyonga", "gender": "Female", "country": "Uganda", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 3, "mean": 13.0, "min": 10.0, "max": 15.0, "std": 2.65, "z_score": -0.483}, {"id": 32, "rank": 103, "author": "MARY EFUA COMMEH", "gender": "Female", "country": "GHANA", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 3, "mean": 13.0, "min": 11.0, "max": 16.0, "std": 2.65, "z_score": -0.483}, {"id": 76, "rank": 104, "author": "Tendai Moyo", "gender": "Female", "country": "Zimbabwe", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 3, "mean": 13.0, "min": 11.0, "max": 15.0, "std": 2.0, "z_score": -0.483}, {"id": 143, "rank": 105, "author": "RACHEL  SAMUEL NUNGU", "gender": "Female", "country": "TANZANIA", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 1, "mean": 13.0, "min": 13.0, "max": 13.0, "std": 0.0, "z_score": -0.483}, {"id": 114, "rank": 106, "author": "Richard HOUEZE", "gender": "Male", "country": "BENIN", "language": "French", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 2, "mean": 12.75, "min": 11.0, "max": 14.5, "std": 2.47, "z_score": -0.571}, {"id": 16, "rank": 107, "author": "Ruth M. Ncube", "gender": "Female", "country": "Zimbabwe ", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 12.67, "min": 11.0, "max": 14.0, "std": 1.53, "z_score": -0.599}, {"id": 20, "rank": 108, "author": "Chukwudi Victor Ajah", "gender": "Male", "country": "Nigeria", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 3, "mean": 12.67, "min": 8.0, "max": 18.0, "std": 5.03, "z_score": -0.599}, {"id": 19, "rank": 109, "author": "Mekuriaw Alemayehu ", "gender": "Male", "country": "Ethiopia", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 3, "mean": 12.67, "min": 6.0, "max": 17.0, "std": 5.86, "z_score": -0.599}, {"id": 44, "rank": 110, "author": "Robert F. Saah", "gender": "Male", "country": "Liberia", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 12.67, "min": 10.0, "max": 15.0, "std": 2.52, "z_score": -0.599}, {"id": 77, "rank": 111, "author": "Harrison Andeko Okinyo", "gender": "Male", "country": "Non Communicable Diseases Alliance Kenya", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 3, "mean": 12.67, "min": 11.0, "max": 15.0, "std": 2.08, "z_score": -0.599}, {"id": 95, "rank": 112, "author": "Makan SOUMARE", "gender": "Male", "country": "MALI", "language": "French", "domain": "B.\tDiabetes ", "nb_reviews": 2, "mean": 12.0, "min": 9.0, "max": 15.0, "std": 4.24, "z_score": -0.835}, {"id": 37, "rank": 113, "author": "Dorothy Carolyne Mabunde", "gender": "Female", "country": "Kenya", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 12.0, "min": 10.0, "max": 16.0, "std": 3.46, "z_score": -0.835}, {"id": 83, "rank": 114, "author": "Rachel Nhungu", "gender": "Female", "country": "Tanzania ", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 1, "mean": 12.0, "min": 12.0, "max": 12.0, "std": 0.0, "z_score": -0.835}, {"id": 17, "rank": 115, "author": "Dr. Caroline Mtaita", "gender": "Female", "country": "Germany", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 3, "mean": 12.0, "min": 10.0, "max": 16.0, "std": 3.46, "z_score": -0.835}, {"id": 104, "rank": 116, "author": "Mohamed Abdisalaam Omar ", "gender": "Male", "country": "Somalia ", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 2, "mean": 11.75, "min": 11.5, "max": 12.0, "std": 0.35, "z_score": -0.923}, {"id": 91, "rank": 117, "author": "Silvia Professione", "gender": "Female", "country": "Italy", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 2, "mean": 11.5, "min": 8.0, "max": 15.0, "std": 4.95, "z_score": -1.011}, {"id": 85, "rank": 118, "author": "Renatus Nyarubamba", "gender": "Male", "country": "Tanzania ", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 11.33, "min": 11.0, "max": 12.0, "std": 0.58, "z_score": -1.071}, {"id": 74, "rank": 119, "author": "Alvern Mutengerere", "gender": "Male", "country": "Zimbabwe", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 2, "mean": 11.25, "min": 11.0, "max": 11.5, "std": 0.35, "z_score": -1.099}, {"id": 78, "rank": 120, "author": "Francois NDIKUMWENAYO", "gender": "Male", "country": "Burundi", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 1, "mean": 11.0, "min": 11.0, "max": 11.0, "std": 0.0, "z_score": -1.187}, {"id": 57, "rank": 121, "author": "Ombeni Idassi", "gender": "Male", "country": "United States of America", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 2, "mean": 11.0, "min": 10.0, "max": 12.0, "std": 1.41, "z_score": -1.187}, {"id": 90, "rank": 122, "author": "Edi Fulai", "gender": "Male", "country": "Mozambique", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 2, "mean": 11.0, "min": 10.0, "max": 12.0, "std": 1.41, "z_score": -1.187}, {"id": 82, "rank": 123, "author": "Filbert Nyoni", "gender": "Male", "country": "Tanzania", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 2, "mean": 11.0, "min": 10.0, "max": 12.0, "std": 1.41, "z_score": -1.187}, {"id": 62, "rank": 124, "author": "Olga Cambaco", "gender": "Female", "country": "Mozambique ", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 2, "mean": 10.75, "min": 8.0, "max": 13.5, "std": 3.89, "z_score": -1.275}, {"id": 14, "rank": 125, "author": "Loveness A. Nkhata", "gender": "Female", "country": "Zambia", "language": "English", "domain": "C.\tRheumatic Heart Disease (RHD)", "nb_reviews": 3, "mean": 10.67, "min": 0.0, "max": 20.0, "std": 10.07, "z_score": -1.304}, {"id": 73, "rank": 126, "author": "Evelyn Matongo", "gender": "Female", "country": "Zambia", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 2, "mean": 10.5, "min": 7.0, "max": 14.0, "std": 4.95, "z_score": -1.363}, {"id": 118, "rank": 127, "author": "Elia Nnko", "gender": "Male", "country": "Tanzania", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 2, "mean": 10.0, "min": 9.0, "max": 11.0, "std": 1.41, "z_score": -1.54}, {"id": 97, "rank": 128, "author": "Kamara Daniel", "gender": "Male", "country": "Uganda", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 1, "mean": 10.0, "min": 10.0, "max": 10.0, "std": 0.0, "z_score": -1.54}, {"id": 84, "rank": 129, "author": "Eva Gakumba Kadimba", "gender": "Female", "country": "Uganda", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 3, "mean": 9.67, "min": 8.0, "max": 12.0, "std": 2.08, "z_score": -1.656}, {"id": 31, "rank": 130, "author": "John Baptist Kiggundu", "gender": "Male", "country": "Infectious Diseases Research Collaboration", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 2, "mean": 9.5, "min": 0.0, "max": 19.0, "std": 13.44, "z_score": -1.716}, {"id": 23, "rank": 131, "author": "Lwimba Faith Kasongo", "gender": "Female", "country": "Zambia ", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 9.33, "min": 6.0, "max": 14.0, "std": 4.16, "z_score": -1.776}, {"id": 46, "rank": 132, "author": "Paul L. Domanico, Ph. D.", "gender": "Male", "country": "United States", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 2, "mean": 9.25, "min": 8.5, "max": 10.0, "std": 1.06, "z_score": -1.804}, {"id": 137, "rank": 133, "author": "RAJKUMAR S", "gender": "Male", "country": "TANZANIA", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 2, "mean": 9.0, "min": 8.0, "max": 10.0, "std": 1.41, "z_score": -1.892}, {"id": 27, "rank": 134, "author": "Mbuso Siwela", "gender": "Male", "country": "Eswatini", "language": "English", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 3, "mean": 9.0, "min": 0.0, "max": 16.0, "std": 8.19, "z_score": -1.892}, {"id": 7, "rank": 135, "author": "Darius Benimana", "gender": "Male", "country": "Rwanda", "language": "English", "domain": "A.\tCardiovascular Disease (CVD)", "nb_reviews": 3, "mean": 8.67, "min": 8.0, "max": 10.0, "std": 1.15, "z_score": -2.008}, {"id": 13, "rank": 136, "author": "MesfinG ZBelo", "gender": "Male", "country": "Canada", "language": "English", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 8.67, "min": 1.0, "max": 13.0, "std": 6.66, "z_score": -2.008}, {"id": 81, "rank": 137, "author": "DEDOCOTON Dégnidé Rose-Marcelle", "gender": "Female", "country": "Côte d'Ivoire", "language": "French", "domain": "B.\tDiabetes ", "nb_reviews": 1, "mean": 8.0, "min": 8.0, "max": 8.0, "std": 0.0, "z_score": -2.244}, {"id": 80, "rank": 138, "author": "Emily Gakii Mutuma", "gender": "Female", "country": "Kenya", "language": "English", "domain": "C.\tRheumatic Heart Disease (RHD)", "nb_reviews": 3, "mean": 6.33, "min": 4.0, "max": 8.0, "std": 2.08, "z_score": -2.833}, {"id": 6, "rank": 139, "author": "SAIZONOU Guigo Jonas Christian", "gender": "Male", "country": "Bénin", "language": "French", "domain": "D.\tSickle Cell Disease (SCD)", "nb_reviews": 2, "mean": 6.0, "min": 4.0, "max": 8.0, "std": 2.83, "z_score": -2.949}, {"id": 101, "rank": 140, "author": "KOUCHAKBE VENANT ", "gender": "Male", "country": "Tchad ", "language": "French", "domain": "B.\tDiabetes ", "nb_reviews": 3, "mean": 4.33, "min": 2.0, "max": 8.0, "std": 3.21, "z_score": -3.537}];
+const REVIEWERS = [{"name": "Kimaro Godfather", "count": 31, "avg": 18.84, "std": 1.95, "bias": 4.47}, {"name": "BOUDREAUX Chantelle", "count": 34, "avg": 15.38, "std": 2.61, "bias": 1.01}, {"name": "Alma Adler", "count": 8, "avg": 15.25, "std": 3.01, "bias": 0.88}, {"name": "Boni Ale", "count": 34, "avg": 15.24, "std": 2.13, "bias": 0.87}, {"name": "MOGGA  Joseph Lou Kenyi", "count": 32, "avg": 15.09, "std": 3.65, "bias": 0.72}, {"name": "OULD SIDI MOHAMED Mohamed", "count": 32, "avg": 14.97, "std": 3.92, "bias": 0.6}, {"name": "BAATIEMA Leaonard", "count": 28, "avg": 14.75, "std": 2.7, "bias": 0.38}, {"name": "Donne Ameme", "count": 30, "avg": 14.5, "std": 3.53, "bias": 0.13}, {"name": "AKYEREKO Ernest", "count": 32, "avg": 14.5, "std": 2.48, "bias": 0.13}, {"name": "MUKARA Kaitesi", "count": 33, "avg": 13.55, "std": 3.98, "bias": -0.82}, {"name": "Ramaiya Kaushik", "count": 29, "avg": 12.83, "std": 2.67, "bias": -1.54}, {"name": "MUTAGAYWA Reuben Kato", "count": 29, "avg": 12.45, "std": 3.05, "bias": -1.92}, {"name": "AGBOYIBOR Kouamivi Mawuenyegan", "count": 15, "avg": 8.67, "std": 6.85, "bias": -5.7}];
+const BIN_LABELS = ["< 10", "10-12", "12-14", "14-16", "16-18", "18-20"];
+const BIN_COUNTS = [12, 13, 25, 38, 44, 8];
+const REVIEWER_ALLOC = {"Boni Ale": 33, "BOUDREAUX Chantelle": 33, "MUKARA Kaitesi": 33, "AKYEREKO Ernest": 33, "OULD SIDI MOHAMED Mohamed": 32, "MOGGA  Joseph Lou Kenyi": 33, "Kimaro Godfather": 32, "Donne Ameme": 33, "MUTAGAYWA Reuben Kato": 33, "BAATIEMA Leaonard": 32, "AGBOYIBOR Kouamivi Mawuenyegan": 33, "Alma Adler": 33, "Ramaiya Kaushik": 33};
+
+// ── STATE ────────────────────────────────────────────────────
+let filtered = [...ABSTRACTS];
+let sortStateS = {col:'rank', dir:'asc'};
+let sortStateZ = {col:'z_score', dir:'desc'};
+
+// ── ANIMATED COUNTERS ────────────────────────────────────────
+function animateCounter(el, target, duration=900){
+  const start = performance.now();
+  const isFloat = String(target).includes('.');
+  function tick(now){
+    const p = Math.min((now-start)/duration,1);
+    const ease = 1 - Math.pow(1-p, 3);
+    const val = isFloat ? (target*ease).toFixed(2) : Math.round(target*ease);
+    el.textContent = val;
+    if(p<1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+function runCounters(){
+  document.querySelectorAll('[data-target]').forEach(el=>{
+    animateCounter(el, parseFloat(el.dataset.target));
+  });
+}
+
+// ── FILTERS ─────────────────────────────────────────────────
+function applyFilters(){
+  const g  = document.getElementById('fGender').value;
+  const l  = document.getElementById('fLang').value;
+  const c  = document.getElementById('fComplete').value;
+  const sm = parseFloat(document.getElementById('fScoreMin').value)||0;
+  filtered = ABSTRACTS.filter(a=>{
+    if(g && a.gender!==g) return false;
+    if(l && a.language!==l) return false;
+    if(c!=='' && a.nb_reviews!==parseInt(c)) return false;
+    if(a.mean<sm) return false;
+    return true;
+  });
+  renderS(); renderZ(); renderMiss(); updateKPIs();
+}
+function resetFilters(){
+  ['fGender','fLang','fComplete','fScoreMin'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('searchS').value='';
+  filtered=[...ABSTRACTS]; renderS(); renderZ(); renderMiss(); updateKPIs();
+}
+function updateKPIs(){
+  const fa=filtered;
+  document.getElementById('kTotal').textContent=fa.length;
+  document.getElementById('kDone').textContent=fa.reduce((s,a)=>s+a.nb_reviews,0);
+  const c3=fa.filter(a=>a.nb_reviews>=3).length;
+  document.getElementById('kComplete').textContent=c3;
+  document.getElementById('kCompletePct').textContent=(fa.length?Math.round(c3/fa.length*100):0)+'% of abstracts';
+  document.getElementById('kNeed1').textContent=fa.filter(a=>a.nb_reviews===2).length;
+  document.getElementById('kNeed2').textContent=fa.filter(a=>a.nb_reviews<2).length;
+  const avg=fa.length?(fa.reduce((s,a)=>s+a.mean,0)/fa.length).toFixed(2):'-';
+  document.getElementById('kAvg').textContent=avg;
+  document.getElementById('badgeScore').textContent=fa.length;
+  document.getElementById('badgeMiss').textContent=fa.filter(a=>a.nb_reviews<3).length + (fa===filtered?1:0);
+}
+
+// ── UTILS ────────────────────────────────────────────────────
+function scoreColor(s){return s>=16?'#0E9F6E':s>=12?'#D97706':'#DC2626';}
+function scoreBg(s){return s>=16?'#DCFCE7':s>=12?'#FEF3C7':'#FEE2E2';}
+function scoreCell(s){
+  const c=scoreColor(s), bg=scoreBg(s);
+  const pct=Math.min(s/20*100,100);
+  return `<div class="score-cell">
+    <div class="score-track"><div class="score-fill" style="width:${pct}%;background:${c}"></div></div>
+    <span class="score-num" style="color:${c}">${s}</span>
+  </div>`;
+}
+function dots(n){
+  let h='<div class="rev-dots">';
+  for(let i=0;i<3;i++) h+=`<div class="rev-dot ${i<n?'done':'empty'}"></div>`;
+  return h+'</div>';
+}
+function domain(d){return d?d.replace(/^[A-Z][.]\s*/,'').trim():'';}
+function rankCell(r){
+  const cls=r===1?'rank-1':r===2?'rank-2':r===3?'rank-3':'rank-n';
+  return `<div class="rank-cell"><div class="rank-num ${cls}">${r}</div></div>`;
+}
+function genderBadge(g){
+  return g==='Female'
+    ? '<span class="badge badge-purple">F</span>'
+    : '<span class="badge badge-blue">M</span>';
+}
+function langBadge(l){
+  return l==='French'
+    ? '<span class="badge badge-purple">FR</span>'
+    : '<span class="badge badge-blue">EN</span>';
+}
+function zInterp(z){
+  if(z>=1.5)  return '<span class="badge badge-green">Excellent</span>';
+  if(z>=0.5)  return '<span class="badge badge-blue">Above avg.</span>';
+  if(z>=-0.5) return '<span class="badge badge-slate">Average</span>';
+  if(z>=-1.5) return '<span class="badge badge-amber">Below avg.</span>';
+  return '<span class="badge badge-red">Weak</span>';
+}
+
+// ── SORTING ──────────────────────────────────────────────────
+function sortS(col, th){
+  if(sortStateS.col===col) sortStateS.dir=sortStateS.dir==='asc'?'desc':'asc';
+  else { sortStateS.col=col; sortStateS.dir='asc'; }
+  document.querySelectorAll('#tabScore thead th.sortable').forEach(t=>{
+    t.classList.remove('asc','desc');
+  });
+  th.classList.add(sortStateS.dir);
+  renderS();
+}
+function sortZ(col, th){
+  if(sortStateZ.col===col) sortStateZ.dir=sortStateZ.dir==='asc'?'desc':'asc';
+  else { sortStateZ.col=col; sortStateZ.dir='desc'; }
+  document.querySelectorAll('#tabZscore thead th.sortable').forEach(t=>{
+    t.classList.remove('asc','desc');
+  });
+  th.classList.add(sortStateZ.dir);
+  renderZ();
+}
+
+// ── RENDER: RANKINGS ─────────────────────────────────────────
+function renderS(){
+  const q=document.getElementById('searchS').value.toLowerCase();
+  let data=[...filtered];
+  if(q) data=data.filter(a=>
+    a.author.toLowerCase().includes(q)||
+    a.country.toLowerCase().includes(q)||
+    String(a.id).includes(q)||
+    domain(a.domain).toLowerCase().includes(q)
+  );
+  data.sort((a,b)=>{
+    let va=a[sortStateS.col], vb=b[sortStateS.col];
+    if(typeof va==='string'){va=va.toLowerCase();vb=vb.toLowerCase();}
+    return sortStateS.dir==='asc'?(va>vb?1:-1):(va<vb?1:-1);
+  });
+  document.getElementById('tbS').innerHTML=data.map(a=>`<tr>
+    <td>${rankCell(a.rank)}</td>
+    <td><span style="font-weight:700;color:var(--text-2)">#${a.id}</span></td>
+    <td style="font-weight:500;white-space:nowrap">${a.author}</td>
+    <td>${genderBadge(a.gender)}</td>
+    <td style="white-space:nowrap">${a.country}</td>
+    <td>${langBadge(a.language)}</td>
+    <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-2)" title="${domain(a.domain)}">${domain(a.domain)}</td>
+    <td>${dots(a.nb_reviews)}</td>
+    <td>${scoreCell(a.mean)}</td>
+    <td style="color:var(--text-3);font-weight:500">${a.min}</td>
+    <td style="color:var(--text-3);font-weight:500">${a.max}</td>
+    <td style="color:var(--text-3);font-weight:500">${a.std}</td>
+  </tr>`).join('');
+  const avg=data.length?(data.reduce((s,a)=>s+a.mean,0)/data.length).toFixed(2):'-';
+  document.getElementById('infoS').textContent=
+    `Showing ${data.length} abstract(s)  ·  Filtered mean score: ${avg}/20`;
+  document.getElementById('badgeScore').textContent=data.length;
+}
+
+// ── RENDER: Z-SCORES ─────────────────────────────────────────
+function renderZ(){
+  let data=[...filtered].sort((a,b)=>b.z_score-a.z_score).map((a,i)=>({...a,rankZ:i+1}));
+  data.sort((a,b)=>{
+    let va=a[sortStateZ.col], vb=b[sortStateZ.col];
+    return sortStateZ.dir==='asc'?(va>vb?1:-1):(va<vb?1:-1);
+  });
+  document.getElementById('tbZ').innerHTML=data.map(a=>`<tr>
+    <td>${rankCell(a.rank)}</td>
+    <td>${rankCell(a.rankZ)}</td>
+    <td><span style="font-weight:700;color:var(--text-2)">#${a.id}</span></td>
+    <td style="font-weight:500;white-space:nowrap">${a.author}</td>
+    <td>${a.country}</td>
+    <td>${dots(a.nb_reviews)}</td>
+    <td>${scoreCell(a.mean)}</td>
+    <td><span class="z-val ${a.z_score>=0?'z-pos':'z-neg'}">${a.z_score>=0?'+':''}${a.z_score}</span></td>
+    <td>${zInterp(a.z_score)}</td>
+  </tr>`).join('');
+}
+
+// ── RENDER: REVIEWERS ────────────────────────────────────────
+function renderRev(){
+  const avgAll=REVIEWERS.reduce((s,r)=>s+r.avg,0)/REVIEWERS.length;
+  const allRevs=[...REVIEWERS];
+  if(!allRevs.some(r=>r.name==='Ramaiya Kaushik'))
+    allRevs.push({name:'Ramaiya Kaushik',count:29,avg:12.83,std:2.67});
+
+  document.getElementById('revGrid').innerHTML=allRevs.map(r=>{
+    const alloc=REVIEWER_ALLOC[r.name]||33;
+    const pct=Math.round(r.count/alloc*100);
+    const isK=r.name==='Ramaiya Kaushik';
+    const cls=isK?'pdf':pct>=100?'complete':pct>=60?'partial':'critical';
+    const fillCls=isK?'c-gold':pct>=100?'c-green':pct>=60?'c-amber':'c-red';
+    const statusBadge=isK
+      ? '<span class="badge badge-gold">PDF</span>'
+      : pct>=100
+        ? '<span class="badge badge-green">&#10003; Complete</span>'
+        : pct===0
+          ? '<span class="badge badge-red">Not started</span>'
+          : `<span class="badge badge-amber">In progress</span>`;
+    return `<div class="rev-card ${cls}">
+      <div class="rev-card-header">
+        <div class="rev-name">${r.name}</div>
+        <div class="rev-tag">${statusBadge}</div>
+      </div>
+      <div class="rev-stats-row">
+        <div class="rev-stat">
+          <span class="rev-stat-val">${r.count}</span>
+          <span class="rev-stat-label">Reviewed</span>
+        </div>
+        <div class="rev-stat">
+          <span class="rev-stat-val">${alloc}</span>
+          <span class="rev-stat-label">Allocated</span>
+        </div>
+        <div class="rev-stat">
+          <span class="rev-stat-val" style="color:${scoreColor(r.avg)}">${r.avg}</span>
+          <span class="rev-stat-label">Avg Score</span>
+        </div>
+      </div>
+      <div class="rev-progress">
+        <div class="rev-progress-fill ${fillCls}" style="width:${Math.min(pct,100)}%"></div>
+      </div>
+      <div class="rev-pct">${pct}% completed</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('tbRev').innerHTML=
+    [...allRevs].sort((a,b)=>b.count-a.count).map(r=>{
+      const alloc=REVIEWER_ALLOC[r.name]||33;
+      const pct=Math.round(r.count/alloc*100);
+      const isK=r.name==='Ramaiya Kaushik';
+      const prof=r.avg>=avgAll+2
+        ? '<span class="badge badge-green">Generous</span>'
+        : r.avg<=avgAll-2
+          ? '<span class="badge badge-amber">Strict</span>'
+          : '<span class="badge badge-blue">Neutral</span>';
+      return `<tr>
+        <td style="font-weight:600">${r.name}${isK?' <span class="badge badge-gold">PDF</span>':''}</td>
+        <td style="font-weight:700">${r.count}</td>
+        <td style="color:var(--text-3)">${alloc}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="score-track" style="width:60px">
+              <div class="score-fill" style="width:${Math.min(pct,100)}%;background:${pct>=100?'var(--emerald)':pct>=60?'var(--amber)':'var(--rose)'}"></div>
+            </div>
+            <span style="font-weight:700;font-size:12px">${pct}%</span>
+          </div>
+        </td>
+        <td>${scoreCell(r.avg)}</td>
+        <td style="color:var(--text-3)">${r.std}</td>
+        <td>${prof}</td>
+      </tr>`;
+    }).join('');
+}
+
+// ── RENDER: INCOMPLETE ───────────────────────────────────────
+function renderMiss(){
+  let data=filtered.filter(a=>a.nb_reviews<3).sort((a,b)=>a.nb_reviews-b.nb_reviews||b.mean-a.mean);
+  const fLang=document.getElementById('fLang').value;
+  if(!fLang||fLang==='French'){
+    if(!data.some(a=>a.id===94))
+      data.unshift({id:94,author:'AKILIMALI MYATSI Benjamin',gender:'Male',country:'DRC',
+        language:'French',domain:'Sickle Cell Disease',nb_reviews:0,mean:0,min:0,max:0,std:0,z_score:-99});
+  }
+  document.getElementById('tbMiss').innerHTML=data.map(a=>{
+    const miss=3-a.nb_reviews;
+    const pri=miss===3
+      ? '<span class="priority-dot pd-critical"></span><span class="badge badge-red">Critical</span>'
+      : miss===2
+        ? '<span class="priority-dot pd-urgent"></span><span class="badge badge-amber">Urgent</span>'
+        : '<span class="priority-dot pd-normal"></span><span class="badge badge-green">Normal</span>';
+    return `<tr>
+      <td><span style="font-weight:700">#${a.id}</span></td>
+      <td style="font-weight:500;white-space:nowrap">${a.author}</td>
+      <td>${genderBadge(a.gender)}</td>
+      <td>${a.country}</td>
+      <td>${langBadge(a.language)}</td>
+      <td>${dots(a.nb_reviews)} <small style="color:var(--text-3)">${a.nb_reviews}/3</small></td>
+      <td style="font-weight:800;color:var(--rose)">${miss}</td>
+      <td>${a.nb_reviews>0?scoreCell(a.mean):'<span style="color:var(--text-3)">—</span>'}</td>
+      <td style="display:flex;align-items:center;gap:4px">${pri}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('badgeMiss').textContent=data.length;
+}
+
+// ── TABS ─────────────────────────────────────────────────────
+function showTab(id,btn){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── CHARTS ───────────────────────────────────────────────────
+function initCharts(){
+  // Score distribution
+  const distCtx=document.getElementById('chartDist').getContext('2d');
+  const distGrad=BIN_COUNTS.map((_,i)=>{
+    const g=distCtx.createLinearGradient(0,0,0,200);
+    const colors=[
+      ['#DC2626','#FCA5A5'],['#D97706','#FCD34D'],['#F59E0B','#FDE68A'],
+      ['#3B82F6','#93C5FD'],['#059669','#6EE7B7'],['#0E9F6E','#34D399']
+    ];
+    g.addColorStop(0, colors[i][0]);
+    g.addColorStop(1, colors[i][1]);
+    return g;
+  });
+  new Chart(distCtx,{
+    type:'bar',
+    data:{
+      labels:BIN_LABELS,
+      datasets:[{
+        label:'Abstracts',
+        data:BIN_COUNTS,
+        backgroundColor:distGrad,
+        borderRadius:6,
+        borderSkipped:false
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'#0B1D3A',
+          titleFont:{family:'Inter',size:12},
+          bodyFont:{family:'Inter',size:12},
+          padding:10,cornerRadius:8,
+          callbacks:{label:ctx=>`${ctx.raw} abstract(s)`}
+        }
+      },
+      scales:{
+        y:{beginAtZero:true,grid:{color:'#F1F5F9'},ticks:{font:{family:'Inter',size:11}}},
+        x:{grid:{display:false},ticks:{font:{family:'Inter',size:11}}}
+      }
+    }
+  });
+
+  // Donut
+  new Chart(document.getElementById('chartDone'),{
+    type:'doughnut',
+    data:{
+      labels:['Complete (3)','2 reviews','1 review','0 reviews'],
+      datasets:[{
+        data:[STATS.complete_3,STATS.need_1,STATS.need_2,STATS.need_3],
+        backgroundColor:['#0E9F6E','#3B82F6','#D97706','#DC2626'],
+        borderWidth:3,borderColor:'#fff',hoverBorderWidth:3
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:'68%',
+      plugins:{
+        legend:{position:'bottom',labels:{boxWidth:10,font:{family:'Inter',size:11},padding:12}},
+        tooltip:{
+          backgroundColor:'#0B1D3A',padding:10,cornerRadius:8,
+          titleFont:{family:'Inter',size:12},bodyFont:{family:'Inter',size:12},
+          callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} (${(ctx.raw/STATS.total_abstracts*100).toFixed(0)}%)`}
+        }
+      }
+    }
+  });
+
+  // Demographics
+  new Chart(document.getElementById('chartDemo'),{
+    type:'bar',
+    data:{
+      labels:['Male','Female','English','French'],
+      datasets:[{
+        data:[STATS.gender_m,STATS.gender_f,STATS.total_en,STATS.total_fr],
+        backgroundColor:['#3B82F6','#EC4899','#0E9F6E','#7C3AED'],
+        borderRadius:6,borderSkipped:false
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'#0B1D3A',padding:10,cornerRadius:8,
+          titleFont:{family:'Inter',size:12},bodyFont:{family:'Inter',size:12}
+        }
+      },
+      scales:{
+        x:{beginAtZero:true,max:150,grid:{color:'#F1F5F9'},ticks:{font:{family:'Inter',size:11}}},
+        y:{grid:{display:false},ticks:{font:{family:'Inter',size:11,weight:'600'}}}
+      }
+    }
+  });
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  initCharts();
+  renderS(); renderZ(); renderRev(); renderMiss(); updateKPIs();
+  setTimeout(runCounters, 200);
+});
+</script>
+</body>
+</html>
