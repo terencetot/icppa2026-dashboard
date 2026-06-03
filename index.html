@@ -1175,8 +1175,7 @@ function formatArticleText(text) {
   const SECTION_HEADERS = /^(INTRODUCTION|BACKGROUND|METHODS?|METHODOLOGY|RESULTS?|FINDINGS|DISCUSSION|CONCLUSION|OBJECTIVE|OBJECTIVES|KEYWORDS?|ABSTRACT\s*ID|AUTHORS?|TITLE|AIM|AIMS|SETTING|CONTEXT|SIGNIFICANCE|LIMITATIONS?|RECOMMENDATIONS?|REFERENCES?)[\s:]*$/i;
   const INFO_LINE = /^(Abstract\s*ID|Country|Disease|Presentation|Keywords?|Word\s*Count|Authors?|Title|Institution)[\s:]/i;
 
-  const lines = text.split('
-');
+  const lines = text.split('\n');
   let html = '';
   let para = '';
 
