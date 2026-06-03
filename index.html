@@ -802,17 +802,17 @@ tbody td { padding: 9px 13px; vertical-align: middle; }
       <h3>Selection Intelligence &nbsp;<span style="font-size:11px;font-weight:400;color:var(--muted)">Bias-corrected scores for fair comparison across reviewers</span></h3>
     </div>
     <details class="si-method-box" open>
-      <summary>&#128218; Methodology &mdash; Selection Intelligence</summary>
+      <summary>&#128218; Methodology : Selection Intelligence</summary>
       <div class="si-method-body">
-        <p><strong>Adjusted Score (Bias-corrected)</strong> &mdash; Each raw score is corrected for the reviewer&apos;s individual bias:
+        <p><strong>Adjusted Score (Bias-corrected)</strong>: Each raw score is corrected for the reviewer&apos;s individual bias:
           <code>Adjusted score = mean(raw_score<sub>i</sub> &minus; bias<sub>i</sub>)</code>,
           where <em>bias<sub>i</sub></em> = reviewer mean &minus; global mean across all reviewers.
           This neutralises differences in reviewer strictness or leniency.</p>
-        <p><strong>Adjusted Z-Score</strong> &mdash; Measures how far each abstract stands from the adjusted-score mean:
+        <p><strong>Adjusted Z-Score</strong>: Measures how far each abstract stands from the adjusted-score mean:
           <code>Z = (adjusted score &minus; &mu;) / &sigma;</code>.
           Z &ge; 1.5 indicates a statistically strong abstract; Z &le; &minus;1.5 indicates a weak one.</p>
-        <p><strong>Confidence Level</strong> &mdash; Based on the number of reviews received: ●●● = 3 reviews (reliable), ●●○ = 2 (moderate), ●○○ = 1 (use with caution).</p>
-        <p><strong>Recommendation</strong> &mdash; Derived from the adjusted Z-score:
+        <p><strong>Confidence Level</strong>: Based on the number of reviews received: ●●● = 3 reviews (reliable), ●●○ = 2 (moderate), ●○○ = 1 (use with caution).</p>
+        <p><strong>Recommendation</strong>: Derived from the adjusted Z-score:
           <span style="color:#166534;font-weight:600">Strong Accept</span> if Z &ge; 1.5 &bull;
           <span style="color:#1e40af;font-weight:600">Accept</span> if Z &ge; 0.5 &bull;
           <span style="color:#92400e;font-weight:600">Review</span> if Z &ge; &minus;0.5 &bull;
@@ -879,7 +879,7 @@ tbody td { padding: 9px 13px; vertical-align: middle; }
       </div>
       <div class="equity-section-sub">
         For each subgroup, the bar shows its <strong>selection rate</strong> = share of that group that reached the Top&nbsp;20.
-        The dashed reference line marks the overall rate (14.2% &mdash; 20&nbsp;out&nbsp;of&nbsp;141).
+        The dashed reference line marks the overall rate (14.2% - 20&nbsp;out&nbsp;of&nbsp;141).
         Groups above the line are over-represented; below are under-represented.
       </div>
     </div>
@@ -1008,7 +1008,7 @@ function dots(n) {
 }
 function rankCell(r) {
   const cls = r === 1 ? 'rank-1' : r === 2 ? 'rank-2' : r === 3 ? 'rank-3' : 'rank-n';
-  return `<span class="rank-num ${cls}">${r === 9999 ? '—' : r}</span>`;
+  return `<span class="rank-num ${cls}">${r === 9999 ? '-' : r}</span>`;
 }
 function genderBadge(g) {
   return g === 'Female'
@@ -1041,7 +1041,7 @@ function shortDomain(d) {
   return d ? d.replace(/^[A-Z][.][ ]*/, '').trim() : '';
 }
 function formatBadge(f) {
-  if (!f) return '<span class="badge badge-slate">—</span>';
+  if (!f) return '<span class="badge badge-slate">-</span>';
   const lower = f.toLowerCase();
   if (lower.includes('oral'))   return `<span class="badge badge-blue">🎤 Oral</span>`;
   if (lower.includes('poster')) return `<span class="badge badge-orange">📌 Poster</span>`;
@@ -1070,16 +1070,16 @@ function renderRankings() {
     <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)" title="${shortDomain(a.domain)}">${shortDomain(a.domain)}</td>
     <td>${formatBadge(a.presentation_format)}</td>
     <td>${dots(a.nb_reviews)}</td>
-    <td>${a.nb_reviews > 0 ? scoreCell(a.mean) + (a.word_count > 300 ? ` <span class="badge badge-amber" title="${a.word_count} words — exceeds 300 word limit">&#9888; ${a.word_count}w</span>` : '') : '<span style="color:var(--muted)">—</span>'}</td>
-    <td style="color:var(--muted)">${a.nb_reviews > 0 ? a.min : '—'}</td>
-    <td style="color:var(--muted)">${a.nb_reviews > 0 ? a.max : '—'}</td>
-    <td style="color:var(--muted)">${a.nb_reviews > 0 ? a.std : '—'}</td>
+    <td>${a.nb_reviews > 0 ? scoreCell(a.mean) + (a.word_count > 300 ? ` <span class="badge badge-amber" title="${a.word_count} words - exceeds 300 word limit">&#9888; ${a.word_count}w</span>` : '') : '<span style="color:var(--muted)">-</span>'}</td>
+    <td style="color:var(--muted)">${a.nb_reviews > 0 ? a.min : '-'}</td>
+    <td style="color:var(--muted)">${a.nb_reviews > 0 ? a.max : '-'}</td>
+    <td style="color:var(--muted)">${a.nb_reviews > 0 ? a.std : '-'}</td>
     <td><button class="btn-view" onclick="openModal(${a.id})">View</button></td>
   </tr>`).join('');
   const shown = data.filter(a => a.nb_reviews > 0);
   const avgStr = shown.length
     ? (shown.reduce((s, a) => s + a.mean, 0) / shown.length).toFixed(2)
-    : '—';
+    : '-';
   document.getElementById('infoRankings').textContent =
     `Showing ${data.length} abstract(s)  ·  Filtered mean score: ${avgStr}/20`;
 }
@@ -1122,11 +1122,11 @@ function renderZscore() {
   document.getElementById('tbZscore').innerHTML = data.map(a => {
     const adjZDisp = a.adjZ !== null && a.adjZ !== undefined
       ? `<span class="${a.adjZ > 0.05 ? 'z-pos' : a.adjZ < -0.05 ? 'z-neg' : 'z-neu'}">${a.adjZ >= 0 ? '+' : ''}${a.adjZ}</span>`
-      : '<span style="color:var(--muted)">—</span>';
+      : '<span style="color:var(--muted)">-</span>';
     const adjScoreDisp = a.adjusted_mean !== null && a.adjusted_mean !== undefined
       ? scoreCell(Math.round(a.adjusted_mean * 10) / 10)
-      : '<span style="color:var(--muted)">—</span>';
-    const recBadge = a.adjZ !== null ? recommendationBadge(a.adjZ) : '<span class="badge badge-slate">—</span>';
+      : '<span style="color:var(--muted)">-</span>';
+    const recBadge = a.adjZ !== null ? recommendationBadge(a.adjZ) : '<span class="badge badge-slate">-</span>';
     const top20class = a.rankSI <= 20 ? 'top20-row' : '';
     const rankDisplay = a.rankSI <= 20
       ? `<div class="rank-cell"><div class="rank-num ${a.rankSI<=3?'rank-'+a.rankSI:'rank-n top20-badge'}">${a.rankSI}</div>${a.rankSI<=20?'<span class="top20-star">&#9733;</span>':""}</div>`
@@ -1279,12 +1279,12 @@ function openModal(id) {
     ? `<span class="modal-meta-item" style="color:${a.word_count > 300 ? 'var(--red)' : 'var(--muted)'}"><strong>Words:</strong> ${a.word_count}${a.word_count > 300 ? ' &#9888;' : ''}</span>`
     : '';
   document.getElementById('modalMeta').innerHTML = `
-    <div class="modal-meta-item"><strong>Author:</strong> ${a.author || '—'}</div>
-    <div class="modal-meta-item"><strong>Country:</strong> ${a.country || '—'}</div>
+    <div class="modal-meta-item"><strong>Author:</strong> ${a.author || '-'}</div>
+    <div class="modal-meta-item"><strong>Country:</strong> ${a.country || '-'}</div>
     <span class="badge badge-slate">${a.who_region}</span>
     ${langBadge(a.language)}
     ${genderBadge(a.gender)}
-    <span class="badge badge-navy" style="background:#e8f0fe;color:var(--navy)">${shortDomain(a.domain) || '—'}</span>
+    <span class="badge badge-navy" style="background:#e8f0fe;color:var(--navy)">${shortDomain(a.domain) || '-'}</span>
     ${a.nb_reviews > 0 ? `<span class="badge" style="background:#e8f7f0;color:#065F46">Score: ${a.mean}/20</span>` : ''}
     ${wcDisplay}
   `;
@@ -1370,7 +1370,7 @@ function initCharts() {
     padding: 10, cornerRadius: 8,
   };
 
-  // 1. Score Distribution — bar with data labels on top
+  // 1. Score Distribution - bar with data labels on top
   const distCtx = document.getElementById('chartDist').getContext('2d');
   const binColors = ['#E8282D','#F5921E','#F9C200','#2EA8D8','#0E9F6E','#163358'];
   new Chart(distCtx, {
@@ -1404,14 +1404,14 @@ function initCharts() {
     }
   });
 
-  // 2. Review Completion — doughnut with formatted labels
+  // 2. Review Completion - doughnut with formatted labels
   const c3 = STATS.complete_3, n1 = STATS.need_1, n2 = STATS.need_2, n3 = STATS.need_3;
   const tot = STATS.total_abstracts;
   const doneLabels = [
-    `Complete (3 reviews) — ${c3} (${Math.round(c3/tot*100)}%)`,
-    `2 reviews — ${n1} (${Math.round(n1/tot*100)}%)`,
-    `1 review  — ${n2} (${Math.round(n2/tot*100)}%)`,
-    `0 reviews — ${n3} (${Math.round(n3/tot*100)}%)`,
+    `Complete (3 reviews): ${c3} (${Math.round(c3/tot*100)}%)`,
+    `2 reviews: ${n1} (${Math.round(n1/tot*100)}%)`,
+    `1 review: ${n2} (${Math.round(n2/tot*100)}%)`,
+    `0 reviews: ${n3} (${Math.round(n3/tot*100)}%)`,
   ];
   new Chart(document.getElementById('chartDone'), {
     type: 'doughnut',
@@ -1442,7 +1442,7 @@ function initCharts() {
     }
   });
 
-  // 3. Gender Distribution — horizontal bar
+  // 3. Gender Distribution - horizontal bar
   new Chart(document.getElementById('chartGender'), {
     type: 'bar',
     data: {
@@ -1474,7 +1474,7 @@ function initCharts() {
     }
   });
 
-  // 4. Language Profile — horizontal bar
+  // 4. Language Profile - horizontal bar
   new Chart(document.getElementById('chartLang'), {
     type: 'bar',
     data: {
@@ -1556,7 +1556,7 @@ function renderEquity() {
       const barPct = Math.round(r.rate / maxRate * 100);
       const isAbove = r.rate >= overallRate - 0.001;
       const barColor = isAbove ? '#0E9F6E' : '#E8282D';
-      const rateLbl = r.total > 0 ? Math.round(r.rate*100)+'%' : '—';
+      const rateLbl = r.total > 0 ? Math.round(r.rate*100)+'%' : '-';
       const label = r.key.length > 18 ? r.key.substring(0,16)+'…' : r.key;
       return `<div class="equity-bar-row" title="${r.key}: ${r.top20} selected / ${r.total} submitted">
         <span class="equity-bar-label">${label}</span>
