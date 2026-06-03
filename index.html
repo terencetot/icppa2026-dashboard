@@ -554,36 +554,54 @@ tbody td { padding: 9px 13px; vertical-align: middle; }
 /* ── EQUITY SECTION ─────────────────────────────────────────── */
 .equity-section {
   background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border);
-  box-shadow: var(--shadow-sm); padding: 22px 24px; margin-top: 24px;
+  box-shadow: var(--shadow-sm); padding: 24px 28px; margin-top: 24px;
 }
 .equity-section-title {
-  font-size: 15px; font-weight: 800; color: var(--navy); margin-bottom: 4px;
+  font-size: 15px; font-weight: 800; color: var(--navy); margin-bottom: 6px;
   display: flex; align-items: center; gap: 8px;
 }
-.equity-section-sub {
-  font-size: 12px; color: var(--muted); margin-bottom: 18px;
-}
+.equity-section-sub { font-size: 12px; color: var(--muted); line-height: 1.6; max-width: 680px; }
 .equity-grid {
-  display: grid; grid-template-columns: repeat(4,1fr); gap: 16px;
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-top: 18px;
 }
 .equity-card {
-  background: #F8FAFC; border-radius: var(--radius-sm); padding: 14px 16px;
+  background: #F8FAFC; border-radius: var(--radius-sm); padding: 16px 18px;
   border: 1px solid var(--border);
 }
 .equity-card-title {
-  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
-  color: var(--muted); margin-bottom: 12px;
+  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .7px;
+  color: var(--navy); margin-bottom: 14px;
+  padding-bottom: 8px; border-bottom: 2px solid var(--border);
 }
 .equity-bar-row {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 7px;
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
 }
-.equity-bar-label { font-size: 11px; color: var(--text); min-width: 80px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.equity-bar-track { flex: 1; height: 7px; background: #E2E8F0; border-radius: 4px; overflow: hidden; }
-.equity-bar-fill { height: 100%; border-radius: 4px; transition: width .6s; }
-.equity-bar-pct { font-size: 10px; color: var(--muted); min-width: 32px; text-align: right; }
-.equity-legend { font-size: 10px; color: var(--muted); margin-top: 8px; display: flex; gap: 10px; flex-wrap: wrap; }
-.equity-legend span { display: flex; align-items: center; gap: 3px; }
-.equity-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.equity-bar-label {
+  font-size: 11px; color: var(--text); width: 80px; flex-shrink: 0;
+  font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.equity-bar-track-wrap { flex: 1; min-width: 0; }
+.equity-bar-track {
+  height: 8px; background: #E2E8F0; border-radius: 4px; overflow: visible;
+  position: relative; margin-bottom: 4px;
+}
+.equity-bar-fill { height: 100%; border-radius: 4px; transition: width .7s ease; position: relative; z-index: 1; }
+.equity-ref-line {
+  position: absolute; top: -3px; bottom: -3px; width: 2px;
+  background: var(--navy); opacity: .35; border-radius: 1px; z-index: 2;
+}
+.equity-bar-meta { display: flex; align-items: center; gap: 6px; }
+.equity-rate-badge {
+  font-size: 10px; font-weight: 800; padding: 1px 6px;
+  border-radius: 10px; white-space: nowrap;
+}
+.equity-count { font-size: 10px; color: var(--muted); }
+.equity-legend {
+  font-size: 11px; color: var(--muted); display: flex; gap: 14px;
+  flex-wrap: wrap; align-items: center;
+}
+.equity-legend span { display: flex; align-items: center; gap: 5px; }
+.equity-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 
 /* ── RESPONSIVE ──────────────────────────────────────────────── */
 @media (max-width: 1100px) {
@@ -784,22 +802,22 @@ tbody td { padding: 9px 13px; vertical-align: middle; }
       <h3>Selection Intelligence &nbsp;<span style="font-size:11px;font-weight:400;color:var(--muted)">Bias-corrected scores for fair comparison across reviewers</span></h3>
     </div>
     <details class="si-method-box" open>
-      <summary>&#128218; M&eacute;thodologie &mdash; Intelligence de S&eacute;lection</summary>
+      <summary>&#128218; Methodology &mdash; Selection Intelligence</summary>
       <div class="si-method-body">
-        <p><strong>Score Ajust&eacute; (Biais-corrig&eacute;)</strong> &mdash; Chaque score brut est corrig&eacute; du biais propre &agrave; son &eacute;valuateur&nbsp;:
-          <code>Score&nbsp;ajust&eacute; = moyenne(score_brut<sub>i</sub> &minus; biais<sub>i</sub>)</code>,
-          o&ugrave; le <em>biais<sub>i</sub></em> = moyenne de l&apos;&eacute;valuateur &minus; moyenne globale de tous les &eacute;valuateurs.
-          Cela corrige les diff&eacute;rences de s&eacute;v&eacute;rit&eacute; entre &eacute;valuateurs.</p>
-        <p><strong>Z-Score Ajust&eacute;</strong> &mdash; Mesure l&apos;&eacute;cart de chaque abstract par rapport &agrave; la moyenne des scores ajust&eacute;s&nbsp;:
-          <code>Z = (score&nbsp;ajust&eacute; &minus; &mu;) / &sigma;</code>.
-          Un Z &ge; 1,5 signifie un abstract statistiquement tr&egrave;s fort.</p>
-        <p><strong>Niveau de Confiance</strong> &mdash; Bas&eacute; sur le nombre de reviews re&ccedil;ues&nbsp;: ●●● = 3 reviews (fiable), ●●○ = 2 (mod&eacute;r&eacute;), ●○○ = 1 (prudence).</p>
-        <p><strong>Recommandation</strong> &mdash; Croisant le Z-score ajust&eacute; et la confiance&nbsp;:
-          <span style="color:#166534;font-weight:600">Accepter (fort)</span> si Z &ge; 1,5 &bull;
-          <span style="color:#1e40af;font-weight:600">Accepter</span> si Z &ge; 0,5 &bull;
-          <span style="color:#92400e;font-weight:600">&Agrave; r&eacute;viser</span> si Z &ge; &minus;0,5 &bull;
-          <span style="color:#991b1b;font-weight:600">Faible</span> sinon.</p>
-        <p style="margin-top:6px;color:var(--muted);font-size:11px">&#9733; Les 20 premiers rangs sont mis en &eacute;vidence comme s&eacute;lection indicative. Utiliser le Score Ajust&eacute; et le Niveau de Confiance conjointement pour la d&eacute;cision finale.</p>
+        <p><strong>Adjusted Score (Bias-corrected)</strong> &mdash; Each raw score is corrected for the reviewer&apos;s individual bias:
+          <code>Adjusted score = mean(raw_score<sub>i</sub> &minus; bias<sub>i</sub>)</code>,
+          where <em>bias<sub>i</sub></em> = reviewer mean &minus; global mean across all reviewers.
+          This neutralises differences in reviewer strictness or leniency.</p>
+        <p><strong>Adjusted Z-Score</strong> &mdash; Measures how far each abstract stands from the adjusted-score mean:
+          <code>Z = (adjusted score &minus; &mu;) / &sigma;</code>.
+          Z &ge; 1.5 indicates a statistically strong abstract; Z &le; &minus;1.5 indicates a weak one.</p>
+        <p><strong>Confidence Level</strong> &mdash; Based on the number of reviews received: ●●● = 3 reviews (reliable), ●●○ = 2 (moderate), ●○○ = 1 (use with caution).</p>
+        <p><strong>Recommendation</strong> &mdash; Derived from the adjusted Z-score:
+          <span style="color:#166534;font-weight:600">Strong Accept</span> if Z &ge; 1.5 &bull;
+          <span style="color:#1e40af;font-weight:600">Accept</span> if Z &ge; 0.5 &bull;
+          <span style="color:#92400e;font-weight:600">Review</span> if Z &ge; &minus;0.5 &bull;
+          <span style="color:#991b1b;font-weight:600">Weak</span> otherwise.</p>
+        <p style="margin-top:6px;color:var(--muted);font-size:11px">&#9733; The top 20 ranks are highlighted as an indicative selection. Use Adjusted Score and Confidence Level together for the final decision.</p>
       </div>
     </details>
     <div class="table-wrap">
@@ -853,16 +871,25 @@ tbody td { padding: 9px 13px; vertical-align: middle; }
 
 <!-- ═══ EQUITY SECTION ══════════════════════════════════════════════════════ -->
 <div class="equity-section" id="equitySection">
-  <div class="equity-section-title">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-    Analyse d&apos;&Eacute;quit&eacute; de la S&eacute;lection
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px">
+    <div>
+      <div class="equity-section-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+        Selection Equity Analysis
+      </div>
+      <div class="equity-section-sub">
+        For each subgroup, the bar shows its <strong>selection rate</strong> = share of that group that reached the Top&nbsp;20.
+        The dashed reference line marks the overall rate (14.2% &mdash; 20&nbsp;out&nbsp;of&nbsp;141).
+        Groups above the line are over-represented; below are under-represented.
+      </div>
+    </div>
+    <div class="equity-legend">
+      <span><span class="equity-dot" style="background:#0E9F6E"></span> Above average rate</span>
+      <span><span class="equity-dot" style="background:#E8282D"></span> Below average rate</span>
+      <span style="border-left:2px dashed #163358;padding-left:6px;color:var(--muted)">&#8213; Overall rate</span>
+    </div>
   </div>
-  <div class="equity-section-sub">Comparaison entre la distribution globale des soumissions et celle du Top&nbsp;20 s&eacute;lectionn&eacute; par Intelligence de S&eacute;lection.</div>
   <div class="equity-grid" id="equityGrid"></div>
-  <div class="equity-legend" style="margin-top:14px">
-    <span><span class="equity-dot" style="background:#2EA8D8"></span> Toutes soumissions (n=141)</span>
-    <span><span class="equity-dot" style="background:#F9C200"></span> Top 20 s&eacute;lectionn&eacute;s</span>
-  </div>
 </div>
 
 </main>
@@ -900,7 +927,7 @@ const REVIEWER_ALLOC = {"Boni Ale": 33, "BOUDREAUX Chantelle": 33, "MUKARA Kaite
 /* ═══ STATE ══════════════════════════════════════════════════════════════════ */
 let tableFiltered = [...ABSTRACTS];
 let tableStateR = { col: 'rank',    dir: 'asc'  };
-let tableStateZ = { col: 'z_score', dir: 'desc' };
+let tableStateZ = { col: 'rankSI', dir: 'asc' };
 
 /* ═══ ANIMATED COUNTERS ══════════════════════════════════════════════════════ */
 function animateCounter(el, target, isFloat, duration) {
@@ -1089,9 +1116,9 @@ function renderZscore() {
       : null;
     return { ...a, rankSI: i + 1, adjZ };
   });
-  const data = tableStateZ.col === 'z_score' || tableStateZ.col === 'nb_reviews' || tableStateZ.col === 'mean' || tableStateZ.col === 'adjusted_mean'
+  const data = tableStateZ.col && tableStateZ.col !== 'rankSI'
     ? sortRows(ranked, tableStateZ.col, tableStateZ.dir)
-    : ranked;
+    : [...ranked].sort((a,b) => a.rankSI - b.rankSI);
   document.getElementById('tbZscore').innerHTML = data.map(a => {
     const adjZDisp = a.adjZ !== null && a.adjZ !== undefined
       ? `<span class="${a.adjZ > 0.05 ? 'z-pos' : a.adjZ < -0.05 ? 'z-neg' : 'z-neu'}">${a.adjZ >= 0 ? '+' : ''}${a.adjZ}</span>`
@@ -1492,52 +1519,71 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* ═══ EQUITY ANALYSIS ════════════════════════════════════════════════════════ */
 function renderEquity() {
-  // Compute top-20 by adjusted_mean
   const withAdj = ABSTRACTS.filter(a => a.adjusted_mean !== null && a.adjusted_mean !== undefined && a.nb_reviews > 0);
-  const top20 = [...withAdj].sort((a,b) => b.adjusted_mean - a.adjusted_mean).slice(0,20);
-  const allAbs = ABSTRACTS;
-  const n = allAbs.length;
-  const n20 = top20.length;
+  const top20set = new Set([...withAdj].sort((a,b) => b.adjusted_mean - a.adjusted_mean).slice(0,20).map(a=>a.id));
+  const overallRate = top20set.size / ABSTRACTS.length;  // e.g. 20/141
 
-  function countBy(arr, key) {
-    const counts = {};
-    arr.forEach(a => { const v = a[key] || 'N/A'; counts[v] = (counts[v]||0)+1; });
-    return counts;
+  function cleanDomain(d) {
+    if (!d) return 'N/A';
+    return d.replace(/^[A-Z][.]\s*/,'').trim().substring(0,28);
   }
 
-  function barRows(allCounts, top20Counts, colors) {
-    const keys = Object.keys(allCounts).sort((a,b) => allCounts[b]-allCounts[a]).slice(0,6);
-    return keys.map((k,i) => {
-      const allPct = n ? Math.round(allCounts[k]/n*100) : 0;
-      const t20Pct = n20 ? Math.round((top20Counts[k]||0)/n20*100) : 0;
-      const color = colors[i % colors.length];
-      const label = k.length > 14 ? k.substring(0,12)+'…' : k;
-      return `<div class="equity-bar-row" title="${k}">
+  function getValue(a, key) {
+    if (key === 'domain') return cleanDomain(a[key]);
+    return a[key] || 'N/A';
+  }
+
+  // Row percentage: for each subgroup, % that made top 20
+  function buildRows(key, maxRows) {
+    const groups = {};
+    ABSTRACTS.forEach(a => {
+      const v = getValue(a, key);
+      if (!groups[v]) groups[v] = { total:0, top20:0 };
+      groups[v].total++;
+      if (top20set.has(a.id)) groups[v].top20++;
+    });
+    return Object.entries(groups)
+      .map(([k,g]) => ({ key:k, total:g.total, top20:g.top20, rate: g.total ? g.top20/g.total : 0 }))
+      .sort((a,b) => b.rate - a.rate)
+      .slice(0, maxRows || 8);
+  }
+
+  function renderPanel(title, key, maxRows) {
+    const rows = buildRows(key, maxRows);
+    const maxRate = Math.max(...rows.map(r=>r.rate), overallRate) * 1.15;
+    const refPct = Math.round(overallRate / maxRate * 100);
+    const rowsHtml = rows.map(r => {
+      const barPct = Math.round(r.rate / maxRate * 100);
+      const isAbove = r.rate >= overallRate - 0.001;
+      const barColor = isAbove ? '#0E9F6E' : '#E8282D';
+      const rateLbl = r.total > 0 ? Math.round(r.rate*100)+'%' : '—';
+      const label = r.key.length > 18 ? r.key.substring(0,16)+'…' : r.key;
+      return `<div class="equity-bar-row" title="${r.key}: ${r.top20} selected / ${r.total} submitted">
         <span class="equity-bar-label">${label}</span>
-        <div style="flex:1;display:flex;flex-direction:column;gap:2px">
-          <div class="equity-bar-track"><div class="equity-bar-fill" style="width:${allPct}%;background:#2EA8D8"></div></div>
-          <div class="equity-bar-track"><div class="equity-bar-fill" style="width:${t20Pct}%;background:#F9C200"></div></div>
+        <div class="equity-bar-track-wrap">
+          <div class="equity-bar-track">
+            <div class="equity-bar-fill" style="width:${barPct}%;background:${barColor}"></div>
+            <div class="equity-ref-line" style="left:${refPct}%"></div>
+          </div>
+          <div class="equity-bar-meta">
+            <span class="equity-rate-badge" style="background:${isAbove?'#DCFCE7':'#FEE2E2'};color:${isAbove?'#166534':'#991B1B'}">${rateLbl}</span>
+            <span class="equity-count">(${r.top20}/${r.total})</span>
+          </div>
         </div>
-        <span class="equity-bar-pct">${allPct}%<br><span style="color:#D97706">${t20Pct}%</span></span>
       </div>`;
     }).join('');
+    return `<div class="equity-card">
+      <div class="equity-card-title">${title}</div>
+      ${rowsHtml}
+    </div>`;
   }
 
-  const panels = [
-    { title: 'Genre', key: 'gender',     colors: ['#2EA8D8','#F5921E'] },
-    { title: 'Sous-R&eacute;gion', key: 'who_region', colors: ['#163358','#2EA8D8','#F5921E','#0E9F6E','#E8282D'] },
-    { title: 'Langue', key: 'language',   colors: ['#2EA8D8','#F5921E'] },
-    { title: 'Domaine', key: 'domain',    colors: ['#163358','#2EA8D8','#F5921E','#0E9F6E','#E8282D','#7C3AED'] },
-  ];
-
-  document.getElementById('equityGrid').innerHTML = panels.map(p => {
-    const allC  = countBy(allAbs, p.key);
-    const top20C = countBy(top20, p.key);
-    return `<div class="equity-card">
-      <div class="equity-card-title">${p.title}</div>
-      ${barRows(allC, top20C, p.colors)}
-    </div>`;
-  }).join('');
+  document.getElementById('equityGrid').innerHTML = [
+    renderPanel('Gender',      'gender',     4),
+    renderPanel('Sub-Region',  'who_region', 6),
+    renderPanel('Language',    'language',   3),
+    renderPanel('Domain',      'domain',     7),
+  ].join('');
 }
 </script>
 </body>
