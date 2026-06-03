@@ -524,6 +524,67 @@ tbody td { padding: 9px 13px; vertical-align: middle; }
   font-size: 12px; color: var(--muted);
 }
 
+/* ── METHODOLOGY BOX ────────────────────────────────────────── */
+.si-method-box {
+  background: #F8FAFF; border: 1px solid #D0DCF0; border-radius: var(--radius-sm);
+  margin: 12px 18px 0; overflow: hidden;
+}
+.si-method-box summary {
+  padding: 10px 14px; font-size: 12.5px; font-weight: 700; color: var(--navy);
+  cursor: pointer; list-style: none; display: flex; align-items: center; gap: 6px;
+  user-select: none;
+}
+.si-method-box summary:hover { background: #EEF3FF; }
+.si-method-box[open] summary { border-bottom: 1px solid #D0DCF0; }
+.si-method-body {
+  padding: 12px 16px; display: flex; flex-direction: column; gap: 7px;
+}
+.si-method-body p { font-size: 12px; color: var(--text); line-height: 1.6; }
+.si-method-body code {
+  background: #EEF3FF; padding: 1px 5px; border-radius: 3px;
+  font-family: monospace; font-size: 11px; color: var(--navy);
+}
+
+/* ── TOP-20 HIGHLIGHTING ────────────────────────────────────── */
+.top20-row { background: #FFFDF0 !important; }
+.top20-row:hover { background: #FFF8D6 !important; }
+.top20-badge { background: linear-gradient(135deg,#F9C200,#F5921E) !important; color:#fff !important; }
+.top20-star { color: #F9C200; font-size: 13px; margin-left: 2px; }
+
+/* ── EQUITY SECTION ─────────────────────────────────────────── */
+.equity-section {
+  background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm); padding: 22px 24px; margin-top: 24px;
+}
+.equity-section-title {
+  font-size: 15px; font-weight: 800; color: var(--navy); margin-bottom: 4px;
+  display: flex; align-items: center; gap: 8px;
+}
+.equity-section-sub {
+  font-size: 12px; color: var(--muted); margin-bottom: 18px;
+}
+.equity-grid {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 16px;
+}
+.equity-card {
+  background: #F8FAFC; border-radius: var(--radius-sm); padding: 14px 16px;
+  border: 1px solid var(--border);
+}
+.equity-card-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+  color: var(--muted); margin-bottom: 12px;
+}
+.equity-bar-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 7px;
+}
+.equity-bar-label { font-size: 11px; color: var(--text); min-width: 80px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.equity-bar-track { flex: 1; height: 7px; background: #E2E8F0; border-radius: 4px; overflow: hidden; }
+.equity-bar-fill { height: 100%; border-radius: 4px; transition: width .6s; }
+.equity-bar-pct { font-size: 10px; color: var(--muted); min-width: 32px; text-align: right; }
+.equity-legend { font-size: 10px; color: var(--muted); margin-top: 8px; display: flex; gap: 10px; flex-wrap: wrap; }
+.equity-legend span { display: flex; align-items: center; gap: 3px; }
+.equity-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
 /* ── RESPONSIVE ──────────────────────────────────────────────── */
 @media (max-width: 1100px) {
   .kpi-strip { grid-template-columns: repeat(2, 1fr); }
@@ -722,9 +783,25 @@ tbody td { padding: 9px 13px; vertical-align: middle; }
     <div class="data-card-head">
       <h3>Selection Intelligence &nbsp;<span style="font-size:11px;font-weight:400;color:var(--muted)">Bias-corrected scores for fair comparison across reviewers</span></h3>
     </div>
-    <div style="padding:10px 18px 0;font-size:12px;color:var(--muted);font-style:italic;border-top:1px solid var(--border)">
-      Scores are adjusted for reviewer bias (each score corrected by &plusmn;reviewer deviation from global mean). Use Adjusted Score and Confidence together for selection decisions.
-    </div>
+    <details class="si-method-box" open>
+      <summary>&#128218; M&eacute;thodologie &mdash; Intelligence de S&eacute;lection</summary>
+      <div class="si-method-body">
+        <p><strong>Score Ajust&eacute; (Biais-corrig&eacute;)</strong> &mdash; Chaque score brut est corrig&eacute; du biais propre &agrave; son &eacute;valuateur&nbsp;:
+          <code>Score&nbsp;ajust&eacute; = moyenne(score_brut<sub>i</sub> &minus; biais<sub>i</sub>)</code>,
+          o&ugrave; le <em>biais<sub>i</sub></em> = moyenne de l&apos;&eacute;valuateur &minus; moyenne globale de tous les &eacute;valuateurs.
+          Cela corrige les diff&eacute;rences de s&eacute;v&eacute;rit&eacute; entre &eacute;valuateurs.</p>
+        <p><strong>Z-Score Ajust&eacute;</strong> &mdash; Mesure l&apos;&eacute;cart de chaque abstract par rapport &agrave; la moyenne des scores ajust&eacute;s&nbsp;:
+          <code>Z = (score&nbsp;ajust&eacute; &minus; &mu;) / &sigma;</code>.
+          Un Z &ge; 1,5 signifie un abstract statistiquement tr&egrave;s fort.</p>
+        <p><strong>Niveau de Confiance</strong> &mdash; Bas&eacute; sur le nombre de reviews re&ccedil;ues&nbsp;: ●●● = 3 reviews (fiable), ●●○ = 2 (mod&eacute;r&eacute;), ●○○ = 1 (prudence).</p>
+        <p><strong>Recommandation</strong> &mdash; Croisant le Z-score ajust&eacute; et la confiance&nbsp;:
+          <span style="color:#166534;font-weight:600">Accepter (fort)</span> si Z &ge; 1,5 &bull;
+          <span style="color:#1e40af;font-weight:600">Accepter</span> si Z &ge; 0,5 &bull;
+          <span style="color:#92400e;font-weight:600">&Agrave; r&eacute;viser</span> si Z &ge; &minus;0,5 &bull;
+          <span style="color:#991b1b;font-weight:600">Faible</span> sinon.</p>
+        <p style="margin-top:6px;color:var(--muted);font-size:11px">&#9733; Les 20 premiers rangs sont mis en &eacute;vidence comme s&eacute;lection indicative. Utiliser le Score Ajust&eacute; et le Niveau de Confiance conjointement pour la d&eacute;cision finale.</p>
+      </div>
+    </details>
     <div class="table-wrap">
       <table>
         <thead>
@@ -741,6 +818,7 @@ tbody td { padding: 9px 13px; vertical-align: middle; }
             <th>Reviewer-Adj Z</th>
             <th>Confidence</th>
             <th>Recommendation</th>
+            <th>Article</th>
           </tr>
         </thead>
         <tbody id="tbZscore"></tbody>
@@ -772,6 +850,20 @@ tbody td { padding: 9px 13px; vertical-align: middle; }
   </div>
 </div>
 
+
+<!-- ═══ EQUITY SECTION ══════════════════════════════════════════════════════ -->
+<div class="equity-section" id="equitySection">
+  <div class="equity-section-title">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+    Analyse d&apos;&Eacute;quit&eacute; de la S&eacute;lection
+  </div>
+  <div class="equity-section-sub">Comparaison entre la distribution globale des soumissions et celle du Top&nbsp;20 s&eacute;lectionn&eacute; par Intelligence de S&eacute;lection.</div>
+  <div class="equity-grid" id="equityGrid"></div>
+  <div class="equity-legend" style="margin-top:14px">
+    <span><span class="equity-dot" style="background:#2EA8D8"></span> Toutes soumissions (n=141)</span>
+    <span><span class="equity-dot" style="background:#F9C200"></span> Top 20 s&eacute;lectionn&eacute;s</span>
+  </div>
+</div>
 
 </main>
 
@@ -1008,8 +1100,12 @@ function renderZscore() {
       ? scoreCell(Math.round(a.adjusted_mean * 10) / 10)
       : '<span style="color:var(--muted)">—</span>';
     const recBadge = a.adjZ !== null ? recommendationBadge(a.adjZ) : '<span class="badge badge-slate">—</span>';
-    return `<tr>
-      <td>${rankCell(a.rankSI)}</td>
+    const top20class = a.rankSI <= 20 ? 'top20-row' : '';
+    const rankDisplay = a.rankSI <= 20
+      ? `<div class="rank-cell"><div class="rank-num ${a.rankSI<=3?'rank-'+a.rankSI:'rank-n top20-badge'}">${a.rankSI}</div>${a.rankSI<=20?'<span class="top20-star">&#9733;</span>':""}</div>`
+      : rankCell(a.rankSI);
+    return `<tr class="${top20class}">
+      <td>${rankDisplay}</td>
       <td><b style="color:var(--muted)">#${a.id}</b></td>
       <td style="font-weight:500;white-space:nowrap;max-width:150px;overflow:hidden;text-overflow:ellipsis">${a.author}</td>
       <td style="white-space:nowrap">${a.country}</td>
@@ -1021,6 +1117,7 @@ function renderZscore() {
       <td>${adjZDisp}</td>
       <td>${confidenceDots(a.nb_reviews)}</td>
       <td>${recBadge}</td>
+      <td><button class="view-btn" onclick="openModal(${a.id})">View</button></td>
     </tr>`;
   }).join('');
   document.getElementById('badgeZscore').textContent = data.length;
@@ -1389,8 +1486,59 @@ document.addEventListener('DOMContentLoaded', () => {
   renderRankings();
   renderZscore();
   renderReviewers();
+  renderEquity();
   setTimeout(runCounters, 300);
 });
+
+/* ═══ EQUITY ANALYSIS ════════════════════════════════════════════════════════ */
+function renderEquity() {
+  // Compute top-20 by adjusted_mean
+  const withAdj = ABSTRACTS.filter(a => a.adjusted_mean !== null && a.adjusted_mean !== undefined && a.nb_reviews > 0);
+  const top20 = [...withAdj].sort((a,b) => b.adjusted_mean - a.adjusted_mean).slice(0,20);
+  const allAbs = ABSTRACTS;
+  const n = allAbs.length;
+  const n20 = top20.length;
+
+  function countBy(arr, key) {
+    const counts = {};
+    arr.forEach(a => { const v = a[key] || 'N/A'; counts[v] = (counts[v]||0)+1; });
+    return counts;
+  }
+
+  function barRows(allCounts, top20Counts, colors) {
+    const keys = Object.keys(allCounts).sort((a,b) => allCounts[b]-allCounts[a]).slice(0,6);
+    return keys.map((k,i) => {
+      const allPct = n ? Math.round(allCounts[k]/n*100) : 0;
+      const t20Pct = n20 ? Math.round((top20Counts[k]||0)/n20*100) : 0;
+      const color = colors[i % colors.length];
+      const label = k.length > 14 ? k.substring(0,12)+'…' : k;
+      return `<div class="equity-bar-row" title="${k}">
+        <span class="equity-bar-label">${label}</span>
+        <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+          <div class="equity-bar-track"><div class="equity-bar-fill" style="width:${allPct}%;background:#2EA8D8"></div></div>
+          <div class="equity-bar-track"><div class="equity-bar-fill" style="width:${t20Pct}%;background:#F9C200"></div></div>
+        </div>
+        <span class="equity-bar-pct">${allPct}%<br><span style="color:#D97706">${t20Pct}%</span></span>
+      </div>`;
+    }).join('');
+  }
+
+  const panels = [
+    { title: 'Genre', key: 'gender',     colors: ['#2EA8D8','#F5921E'] },
+    { title: 'Sous-R&eacute;gion', key: 'who_region', colors: ['#163358','#2EA8D8','#F5921E','#0E9F6E','#E8282D'] },
+    { title: 'Langue', key: 'language',   colors: ['#2EA8D8','#F5921E'] },
+    { title: 'Domaine', key: 'domain',    colors: ['#163358','#2EA8D8','#F5921E','#0E9F6E','#E8282D','#7C3AED'] },
+  ];
+
+  document.getElementById('equityGrid').innerHTML = panels.map(p => {
+    const allC  = countBy(allAbs, p.key);
+    const top20C = countBy(top20, p.key);
+    return `<div class="equity-card">
+      <div class="equity-card-title">${p.title}</div>
+      ${barRows(allC, top20C, p.colors)}
+    </div>`;
+  }).join('');
+}
 </script>
 </body>
 </html>
