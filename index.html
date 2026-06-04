@@ -918,7 +918,7 @@ tbody td { padding: 9px 13px; vertical-align: middle; }
         Selection Equity Analysis
       </div>
       <div class="equity-section-sub">
-        Each bar = <strong>row %</strong> (selection rate within the group &mdash; selected / total in group). Column figures show each group&apos;s share of <strong>all submissions</strong> vs <strong style="color:#D97706">current selection</strong>.
+        Each bar = <strong>row %</strong> (selected / total in group). Column figures: <strong>All</strong> = group&apos;s share of all submissions &bull; <strong style="color:#D97706">orange</strong> = group&apos;s share of current selection.
         <strong style="color:#991B1B">Red</strong> = rate below 1/1.5 (&asymp;67%) of the leading group (1.5&times; disparity rule). Updates live as you check/uncheck abstracts above.
       </div>
     </div>
@@ -926,8 +926,8 @@ tbody td { padding: 9px 13px; vertical-align: middle; }
       <span><span class="equity-dot" style="background:#0E9F6E"></span> Within 1.5&times; of leading group</span>
       <span><span class="equity-dot" style="background:#E8282D"></span> &gt;1.5&times; disparity (flagged)</span>
       <span style="border-left:2px dashed #163358;padding-left:6px;color:var(--muted)">&#8213; Overall rate</span>
-      <span><span class="equity-dot" style="background:#6B7E95"></span> All: column % of all submissions</span>
-      <span><span class="equity-dot" style="background:#D97706"></span> Top20: column % of selected</span>
+      <span><span class="equity-dot" style="background:#6B7E95"></span> All: share of all submissions</span>
+      <span><span class="equity-dot" style="background:#D97706"></span> Orange: share of selected abstracts</span>
     </div>
   </div>
   <div class="equity-grid" id="equityGrid"></div>
@@ -1721,7 +1721,7 @@ function renderEquity() {
       const colPctTop20 = top20set.size > 0 ? Math.round(r.top20 / top20set.size * 100) + '%' : '-';
       const ratio   = r.rate > 0 ? (leadingRate / r.rate).toFixed(1) : '-';
       const tooltip = r.key + ': ' + r.top20 + ' selected / ' + r.total + ' submitted'
-                    + ' | Row%: ' + rowPct + ' | Col% All: ' + colPctAll + ' / Top20: ' + colPctTop20
+                    + ' | Row%: ' + rowPct + ' | All: ' + colPctAll + ' | Selected: ' + colPctTop20
                     + (flagRed ? ' | Disparity: x'+ratio : '');
       const label = r.key.length > 18 ? r.key.substring(0,16)+'...' : r.key;
       return '<div class="equity-bar-row" title="'+tooltip+'">'
@@ -1735,7 +1735,7 @@ function renderEquity() {
         +     '<span class="equity-rate-badge" style="background:'+badgeBg+';color:'+badgeColor+'">'+rowPct+'</span>'
         +     '<span class="equity-count" style="display:flex;flex-direction:column;gap:1px;text-align:right">'
         +       '<span title="Share of all submissions">All: '+colPctAll+' ('+r.total+')</span>'
-        +       '<span title="Share of Top 20 selected" style="color:#D97706;font-weight:600">Top20: '+colPctTop20+' ('+r.top20+')</span>'
+        +       '<span title="Share of selected abstracts" style="color:#D97706;font-weight:600">'+colPctTop20+' ('+r.top20+')</span>'
         +     '</span>'
         +     (flagRed ? '<span style="font-weight:700;color:#991B1B;font-size:10px">&times;'+ratio+'</span>' : '')
         +   '</div>'
