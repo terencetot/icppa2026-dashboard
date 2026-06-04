@@ -1530,114 +1530,7 @@ function initCharts() {
 }
 
 /* ═══ INIT ═══════════════════════════════════════════════════════════════════ */
-document.addEventListener('/* ═══ EXCEL EXPORT (no CDN — pure HTML table method) ════════════════════════ */
-function escXml(v) {
-  if (v === null || v === undefined) return '';
-  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function exportToExcel(headers, dataRows, fileName) {
-  // Build an HTML table that Excel can open natively
-  let html = '<html xmlns:o="urn:schemas-microsoft-com:office:office"'
-           + ' xmlns:x="urn:schemas-microsoft-com:office:excel"'
-           + ' xmlns="http://www.w3.org/TR/REC-html40">'
-           + '<head><meta charset="UTF-8">'
-           + '<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets>'
-           + '<x:ExcelWorksheet><x:Name>Data</x:Name>'
-           + '<x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>'
-           + '</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->'
-           + '</head><body><table border="1">';
-  // Header row
-  html += '<tr>' + headers.map(h => '<th style="background:#163358;color:white;font-weight:bold">' + escXml(h) + '</th>').join('') + '</tr>';
-  // Data rows
-  dataRows.forEach(row => {
-    html += '<tr>' + headers.map(h => '<td>' + escXml(row[h]) + '</td>').join('') + '</tr>';
-  });
-  html += '</table></body></html>';
-
-  const blob = new Blob(['﻿' + html], { type: 'application/vnd.ms-excel;charset=utf-8' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-function downloadExcel(mode) {
-  if (mode === 'rankings') {
-    const q = document.getElementById('searchS') ? document.getElementById('searchS').value : '';
-    let data = [...tableFiltered];
-    if (q) data = data.filter(a =>
-      a.author.toLowerCase().includes(q.toLowerCase()) ||
-      a.country.toLowerCase().includes(q.toLowerCase()) ||
-      String(a.id).includes(q)
-    );
-    data.sort((a,b) => a.rank - b.rank);
-    const hdrs = ['Rank','Abstract ID','Author','Gender','Country','Sub-Region',
-                  'Language','Disease Domain','Format','Reviews Received',
-                  'Mean Score /20','Min Score','Max Score','Std Dev',
-                  'Z-Score','Word Count','Over Word Limit'];
-    const rows = data.map(a => ({
-      'Rank':             a.rank,
-      'Abstract ID':      a.id,
-      'Author':           a.author,
-      'Gender':           a.gender,
-      'Country':          a.country,
-      'Sub-Region':       a.who_region,
-      'Language':         a.language,
-      'Disease Domain':   shortDomain(a.domain),
-      'Format':           a.presentation_format || '',
-      'Reviews Received': a.nb_reviews,
-      'Mean Score /20':   a.mean,
-      'Min Score':        a.nb_reviews > 0 ? a.min : '',
-      'Max Score':        a.nb_reviews > 0 ? a.max : '',
-      'Std Dev':          a.nb_reviews > 0 ? a.std : '',
-      'Z-Score':          a.z_score,
-      'Word Count':       a.word_count || '',
-      'Over Word Limit':  a.word_count > 300 ? 'Yes' : 'No',
-    }));
-    exportToExcel(hdrs, rows, 'ICPPA2026_Abstract_Rankings.xls');
-
-  } else {
-    const withAdj = ABSTRACTS.filter(a => a.adjusted_mean !== null && a.adjusted_mean !== undefined && a.nb_reviews > 0);
-    const adjMean = withAdj.reduce((s,a)=>s+a.adjusted_mean,0) / withAdj.length;
-    const adjStd  = Math.sqrt(withAdj.reduce((s,a)=>s+Math.pow(a.adjusted_mean-adjMean,2),0) / (withAdj.length-1));
-    const ranked  = [...withAdj].sort((a,b)=>(b.adjusted_mean||0)-(a.adjusted_mean||0))
-      .map((a,i) => {
-        const adjZ = adjStd ? Math.round(((a.adjusted_mean-adjMean)/adjStd)*100)/100 : null;
-        const conf = a.nb_reviews===3?'High':a.nb_reviews===2?'Medium':'Low';
-        const rec  = adjZ!==null ? (adjZ>=1.5?'Strong Accept':adjZ>=0.5?'Accept':adjZ>=-0.5?'Review':'Weak') : '';
-        return {...a, rankSI:i+1, adjZ, conf, rec};
-      });
-    const hdrs = ['SI Rank','Abstract ID','Author','Country','Sub-Region',
-                  'Reviews Received','Raw Mean Score /20','Adjusted Score /20',
-                  'Z-Score (raw)','Z-Score (adjusted)','Confidence Level',
-                  'Recommendation','Gender','Language','Word Count'];
-    const rows = ranked.map(a => ({
-      'SI Rank':            a.rankSI,
-      'Abstract ID':        a.id,
-      'Author':             a.author,
-      'Country':            a.country,
-      'Sub-Region':         a.who_region,
-      'Reviews Received':   a.nb_reviews,
-      'Raw Mean Score /20': a.mean,
-      'Adjusted Score /20': a.adjusted_mean,
-      'Z-Score (raw)':      a.z_score,
-      'Z-Score (adjusted)': a.adjZ,
-      'Confidence Level':   a.conf,
-      'Recommendation':     a.rec,
-      'Gender':             a.gender,
-      'Language':           a.language,
-      'Word Count':         a.word_count || '',
-    }));
-    exportToExcel(hdrs, rows, 'ICPPA2026_Selection_Intelligence.xls');
-  }
-}
-
-DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
   initCharts();
   renderRankings();
   renderZscore();
@@ -1645,6 +1538,82 @@ DOMContentLoaded', () => {
   renderEquity();
   setTimeout(runCounters, 300);
 });
+
+/* ═══ EXCEL EXPORT (no CDN - pure HTML table method) ════════════════════════ */
+function escXml(v) {
+  if (v === null || v === undefined) return '';
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function exportToExcel(headers, dataRows, fileName) {
+  var tbl = '<table border="1"><tr>'
+    + headers.map(function(h){ return '<th style="background:#163358;color:white;font-weight:bold">'+escXml(h)+'</th>'; }).join('')
+    + '</tr>';
+  dataRows.forEach(function(row) {
+    tbl += '<tr>' + headers.map(function(h){ return '<td>'+escXml(row[h])+'</td>'; }).join('') + '</tr>';
+  });
+  tbl += '</table>';
+  var blob = new Blob(['﻿'+tbl], {type:'application/vnd.ms-excel;charset=utf-8'});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href = url; a.download = fileName;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+function downloadExcel(mode) {
+  var hdrs, rows;
+  if (mode === 'rankings') {
+    var q = document.getElementById('searchS') ? document.getElementById('searchS').value : '';
+    var data = tableFiltered.filter(function(a){
+      if (!q) return true;
+      return a.author.toLowerCase().indexOf(q.toLowerCase())>=0
+          || a.country.toLowerCase().indexOf(q.toLowerCase())>=0
+          || String(a.id).indexOf(q)>=0;
+    }).sort(function(a,b){return a.rank-b.rank;});
+    hdrs = ['Rank','Abstract ID','Author','Gender','Country','Sub-Region','Language',
+            'Disease Domain','Format','Reviews','Mean Score /20','Min','Max','Std Dev',
+            'Z-Score','Word Count','Over Word Limit'];
+    rows = data.map(function(a){
+      var o = {};
+      o['Rank']=a.rank; o['Abstract ID']=a.id; o['Author']=a.author;
+      o['Gender']=a.gender; o['Country']=a.country; o['Sub-Region']=a.who_region;
+      o['Language']=a.language; o['Disease Domain']=shortDomain(a.domain);
+      o['Format']=a.presentation_format||''; o['Reviews']=a.nb_reviews;
+      o['Mean Score /20']=a.mean;
+      o['Min']=a.nb_reviews>0?a.min:''; o['Max']=a.nb_reviews>0?a.max:'';
+      o['Std Dev']=a.nb_reviews>0?a.std:''; o['Z-Score']=a.z_score;
+      o['Word Count']=a.word_count||'';
+      o['Over Word Limit']=a.word_count>300?'Yes':'No';
+      return o;
+    });
+    exportToExcel(hdrs, rows, 'ICPPA2026_Abstract_Rankings.xls');
+  } else {
+    var withAdj = ABSTRACTS.filter(function(a){return a.adjusted_mean!==null&&a.adjusted_mean!==undefined&&a.nb_reviews>0;});
+    var adjMean = withAdj.reduce(function(s,a){return s+a.adjusted_mean;},0)/withAdj.length;
+    var adjStd  = Math.sqrt(withAdj.reduce(function(s,a){return s+Math.pow(a.adjusted_mean-adjMean,2);},0)/(withAdj.length-1));
+    var ranked  = withAdj.slice().sort(function(a,b){return (b.adjusted_mean||0)-(a.adjusted_mean||0);})
+      .map(function(a,i){
+        var adjZ = adjStd ? Math.round(((a.adjusted_mean-adjMean)/adjStd)*100)/100 : null;
+        var conf = a.nb_reviews===3?'High':a.nb_reviews===2?'Medium':'Low';
+        var rec  = adjZ!==null?(adjZ>=1.5?'Strong Accept':adjZ>=0.5?'Accept':adjZ>=-0.5?'Review':'Weak'):'';
+        var r = {}; Object.assign(r,a); r.rankSI=i+1; r.adjZ=adjZ; r.conf=conf; r.rec=rec;
+        return r;
+      });
+    hdrs = ['SI Rank','Abstract ID','Author','Country','Sub-Region','Reviews',
+            'Raw Score /20','Adjusted Score /20','Z-Score','Adj Z-Score',
+            'Confidence','Recommendation','Gender','Language','Word Count'];
+    rows = ranked.map(function(a){
+      var o = {};
+      o['SI Rank']=a.rankSI; o['Abstract ID']=a.id; o['Author']=a.author;
+      o['Country']=a.country; o['Sub-Region']=a.who_region; o['Reviews']=a.nb_reviews;
+      o['Raw Score /20']=a.mean; o['Adjusted Score /20']=a.adjusted_mean;
+      o['Z-Score']=a.z_score; o['Adj Z-Score']=a.adjZ;
+      o['Confidence']=a.conf; o['Recommendation']=a.rec;
+      o['Gender']=a.gender; o['Language']=a.language; o['Word Count']=a.word_count||'';
+      return o;
+    });
+    exportToExcel(hdrs, rows, 'ICPPA2026_Selection_Intelligence.xls');
+  }
+}
 
 /* ═══ EQUITY ANALYSIS ════════════════════════════════════════════════════════ */
 function renderEquity() {
