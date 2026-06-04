@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 /* ── RESET ───────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -603,6 +604,19 @@ tbody td { padding: 9px 13px; vertical-align: middle; }
 .equity-legend span { display: flex; align-items: center; gap: 5px; }
 .equity-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 
+/* ── DOWNLOAD BUTTON ─────────────────────────────────────────── */
+.btn-download {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: var(--radius-sm);
+  background: var(--navy); color: #fff;
+  font-size: 12px; font-weight: 600; font-family: 'Inter', sans-serif;
+  border: none; cursor: pointer; text-decoration: none;
+  transition: background .15s, transform .1s;
+  white-space: nowrap;
+}
+.btn-download:hover { background: #1e4a8a; transform: translateY(-1px); }
+.btn-download svg { flex-shrink: 0; }
+
 /* ── RESPONSIVE ──────────────────────────────────────────────── */
 @media (max-width: 1100px) {
   .kpi-strip { grid-template-columns: repeat(2, 1fr); }
@@ -766,6 +780,10 @@ tbody td { padding: 9px 13px; vertical-align: middle; }
   <div class="data-card">
     <div class="data-card-head">
       <h3>Rankings by Mean Score</h3>
+      <button class="btn-download" onclick="downloadExcel('rankings')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Excel
+      </button>
     </div>
     <div class="table-wrap">
       <table>
@@ -800,6 +818,10 @@ tbody td { padding: 9px 13px; vertical-align: middle; }
   <div class="data-card no-filter">
     <div class="data-card-head">
       <h3>Selection Intelligence &nbsp;<span style="font-size:11px;font-weight:400;color:var(--muted)">Bias-corrected scores for fair comparison across reviewers</span></h3>
+      <button class="btn-download" onclick="downloadExcel('selection')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Excel
+      </button>
     </div>
     <details class="si-method-box" open>
       <summary>&#128218; Methodology : Selection Intelligence</summary>
@@ -1509,7 +1531,97 @@ function initCharts() {
 }
 
 /* ═══ INIT ═══════════════════════════════════════════════════════════════════ */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('/* ═══ EXCEL EXPORT ═══════════════════════════════════════════════════════════ */
+function downloadExcel(mode) {
+  let rows, sheetName, fileName;
+
+  if (mode === 'rankings') {
+    // Export current filtered Abstract Rankings table
+    const q = (document.getElementById('searchS') || {}).value || '';
+    const fG = (document.getElementById('fGender') || {}).value || '';
+    const fL = (document.getElementById('fLang')   || {}).value || '';
+    const fR = (document.getElementById('fRegion') || {}).value || '';
+    const fS = parseFloat((document.getElementById('fScore') || {}).value) || 0;
+    let data = [...tableFiltered];
+    if (q) data = data.filter(a =>
+      a.author.toLowerCase().includes(q.toLowerCase()) ||
+      a.country.toLowerCase().includes(q.toLowerCase()) ||
+      String(a.id).includes(q)
+    );
+    sheetName = 'Abstract Rankings';
+    fileName  = 'ICPPA2026_Abstract_Rankings.xlsx';
+    rows = data.sort((a,b) => a.rank - b.rank).map(a => ({
+      'Rank':             a.rank,
+      'Abstract ID':      a.id,
+      'Author':           a.author,
+      'Gender':           a.gender,
+      'Country':          a.country,
+      'Sub-Region':       a.who_region,
+      'Language':         a.language,
+      'Disease Domain':   a.domain ? a.domain.replace(/^[A-Z][.]\s*/,'').trim() : '',
+      'Format':           a.presentation_format || '',
+      'Reviews Received': a.nb_reviews,
+      'Mean Score /20':   a.mean,
+      'Min Score':        a.nb_reviews > 0 ? a.min : '',
+      'Max Score':        a.nb_reviews > 0 ? a.max : '',
+      'Std Dev':          a.nb_reviews > 0 ? a.std : '',
+      'Z-Score':          a.z_score,
+      'Word Count':       a.word_count || '',
+      'Over Word Limit':  a.word_count > 300 ? 'Yes' : 'No',
+    }));
+
+  } else {
+    // Export Selection Intelligence table
+    const withAdj = ABSTRACTS.filter(a => a.adjusted_mean !== null && a.adjusted_mean !== undefined && a.nb_reviews > 0);
+    const adjScores = withAdj.map(a => a.adjusted_mean);
+    const adjMean = adjScores.reduce((s,v)=>s+v,0) / adjScores.length;
+    const adjStd  = Math.sqrt(adjScores.reduce((s,v)=>s+Math.pow(v-adjMean,2),0) / (adjScores.length-1));
+    const ranked  = [...withAdj]
+      .sort((a,b) => (b.adjusted_mean||0)-(a.adjusted_mean||0))
+      .map((a,i) => {
+        const adjZ = adjStd ? Math.round(((a.adjusted_mean - adjMean)/adjStd)*100)/100 : null;
+        const conf = a.nb_reviews === 3 ? 'High' : a.nb_reviews === 2 ? 'Medium' : 'Low';
+        const rec  = adjZ !== null
+          ? (adjZ >= 1.5 ? 'Strong Accept' : adjZ >= 0.5 ? 'Accept' : adjZ >= -0.5 ? 'Review' : 'Weak')
+          : '';
+        return { ...a, rankSI: i+1, adjZ, conf, rec };
+      });
+    sheetName = 'Selection Intelligence';
+    fileName  = 'ICPPA2026_Selection_Intelligence.xlsx';
+    rows = ranked.map(a => ({
+      'SI Rank':            a.rankSI,
+      'Abstract ID':        a.id,
+      'Author':             a.author,
+      'Country':            a.country,
+      'Sub-Region':         a.who_region,
+      'Reviews Received':   a.nb_reviews,
+      'Raw Mean Score /20': a.mean,
+      'Adjusted Score /20': a.adjusted_mean,
+      'Z-Score (raw)':      a.z_score,
+      'Z-Score (adjusted)': a.adjZ,
+      'Confidence Level':   a.conf,
+      'Recommendation':     a.rec,
+      'Gender':             a.gender,
+      'Language':           a.language,
+      'Word Count':         a.word_count || '',
+    }));
+  }
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+
+  // Auto-width columns
+  const colWidths = Object.keys(rows[0] || {}).map(k => {
+    const maxLen = Math.max(k.length, ...rows.map(r => String(r[k]||'').length));
+    return { wch: Math.min(maxLen + 2, 40) };
+  });
+  ws['!cols'] = colWidths;
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  XLSX.writeFile(wb, fileName);
+}
+
+DOMContentLoaded', () => {
   initCharts();
   renderRankings();
   renderZscore();
