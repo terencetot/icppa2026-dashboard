@@ -878,14 +878,15 @@ tbody td { padding: 9px 13px; vertical-align: middle; }
         Selection Equity Analysis
       </div>
       <div class="equity-section-sub">
-        For each subgroup, the bar shows its <strong>selection rate</strong> = share of that group that reached the Top&nbsp;20.
-        The dashed reference line marks the overall rate (14.2% - 20&nbsp;out&nbsp;of&nbsp;141).
-        Groups above the line are over-represented; below are under-represented.
+        For each subgroup, the bar shows its <strong>selection rate</strong> (proportion of that group reaching the Top&nbsp;20).
+        <strong>Disparity rule (1.5&times; threshold):</strong> a subgroup is flagged <span style="color:#991B1B;font-weight:600">red</span> only when its selection rate falls below <em>1/1.5</em> (&asymp;&nbsp;67%) of the highest-performing subgroup within the same variable - indicating a statistically meaningful disparity.
+        This is analogous to the EEOC&nbsp;80% rule but uses a stricter 1.5&times; ratio, consistent with WHO equity monitoring standards.
+        The dashed reference line marks the overall selection rate (14.2% - 20&nbsp;out&nbsp;of&nbsp;141 abstracts).
       </div>
     </div>
     <div class="equity-legend">
-      <span><span class="equity-dot" style="background:#0E9F6E"></span> Above average rate</span>
-      <span><span class="equity-dot" style="background:#E8282D"></span> Below average rate</span>
+      <span><span class="equity-dot" style="background:#0E9F6E"></span> Within 1.5&times; of leading group (acceptable)</span>
+      <span><span class="equity-dot" style="background:#E8282D"></span> &gt;1.5&times; below leading group (significant disparity)</span>
       <span style="border-left:2px dashed #163358;padding-left:6px;color:var(--muted)">&#8213; Overall rate</span>
     </div>
   </div>
@@ -1550,15 +1551,27 @@ function renderEquity() {
 
   function renderPanel(title, key, maxRows) {
     const rows = buildRows(key, maxRows);
-    const maxRate = Math.max(...rows.map(r=>r.rate), overallRate) * 1.15;
-    const refPct = Math.round(overallRate / maxRate * 100);
+    // Leading rate = highest selection rate among groups with at least 1 submission
+    const leadingRate = Math.max(...rows.filter(r=>r.total>0).map(r=>r.rate), 0.0001);
+    // 1.5x disparity threshold: flag red if rate < leadingRate / 1.5
+    const disparityThreshold = leadingRate / 1.5;
+    // Chart scale: slightly above the leading rate for visual breathing room
+    const scaleMax = leadingRate * 1.15;
+    const refPct = Math.round(overallRate / scaleMax * 100);
     const rowsHtml = rows.map(r => {
-      const barPct = Math.round(r.rate / maxRate * 100);
-      const isAbove = r.rate >= overallRate - 0.001;
-      const barColor = isAbove ? '#0E9F6E' : '#E8282D';
-      const rateLbl = r.total > 0 ? Math.round(r.rate*100)+'%' : '-';
+      if (r.total === 0) return '';
+      const barPct  = Math.round(r.rate / scaleMax * 100);
+      // Red only when rate < leadingRate/1.5 (i.e. >1.5x disparity vs leading group)
+      const flagRed = r.rate < disparityThreshold - 0.0001;
+      const barColor   = flagRed ? '#E8282D' : '#0E9F6E';
+      const badgeBg    = flagRed ? '#FEE2E2' : '#DCFCE7';
+      const badgeColor = flagRed ? '#991B1B' : '#166534';
+      const rateLbl  = Math.round(r.rate * 100) + '%';
+      const ratio    = r.rate > 0 ? (leadingRate / r.rate).toFixed(1) : '-';
+      const tooltip  = `${r.key}: ${r.top20} selected / ${r.total} submitted (${rateLbl})`
+                     + (flagRed ? ` - disparity ratio ${ratio}x vs leading group` : '');
       const label = r.key.length > 18 ? r.key.substring(0,16)+'…' : r.key;
-      return `<div class="equity-bar-row" title="${r.key}: ${r.top20} selected / ${r.total} submitted">
+      return `<div class="equity-bar-row" title="${tooltip}">
         <span class="equity-bar-label">${label}</span>
         <div class="equity-bar-track-wrap">
           <div class="equity-bar-track">
@@ -1566,14 +1579,16 @@ function renderEquity() {
             <div class="equity-ref-line" style="left:${refPct}%"></div>
           </div>
           <div class="equity-bar-meta">
-            <span class="equity-rate-badge" style="background:${isAbove?'#DCFCE7':'#FEE2E2'};color:${isAbove?'#166534':'#991B1B'}">${rateLbl}</span>
-            <span class="equity-count">(${r.top20}/${r.total})</span>
+            <span class="equity-rate-badge" style="background:${badgeBg};color:${badgeColor}">${rateLbl}</span>
+            <span class="equity-count">(${r.top20}/${r.total})${flagRed ? ' <span style="font-weight:800;color:#991B1B" title="Disparity ratio: '+ratio+'x">&times;${ratio}</span>' : ''}</span>
           </div>
         </div>
       </div>`;
     }).join('');
     return `<div class="equity-card">
-      <div class="equity-card-title">${title}</div>
+      <div class="equity-card-title">${title}
+        <span style="font-size:9px;font-weight:400;color:var(--muted);margin-left:4px">leading: ${Math.round(leadingRate*100)}%</span>
+      </div>
       ${rowsHtml}
     </div>`;
   }
