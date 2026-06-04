@@ -603,6 +603,17 @@ tbody td { padding: 9px 13px; vertical-align: middle; }
 .equity-legend span { display: flex; align-items: center; gap: 5px; }
 .equity-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 
+/* ── SELECTION CHECKBOX ─────────────────────────────────────── */
+.sel-checkbox {
+  width: 16px; height: 16px; cursor: pointer; accent-color: var(--navy);
+  border-radius: 4px;
+}
+.row-selected {
+  background: #F0F7FF !important;
+  border-left: 3px solid var(--blue);
+}
+.row-selected:hover { background: #E4F0FF !important; }
+
 /* ── DOWNLOAD BUTTON ─────────────────────────────────────────── */
 .btn-download {
   display: inline-flex; align-items: center; gap: 6px;
@@ -779,15 +790,23 @@ tbody td { padding: 9px 13px; vertical-align: middle; }
   <div class="data-card">
     <div class="data-card-head">
       <h3>Rankings by Mean Score</h3>
-      <button class="btn-download" onclick="downloadExcel('rankings')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Download Excel
-      </button>
+      <div style="display:flex;align-items:center;gap:10px;margin-left:auto">
+        <span id="selectionBadge" style="font-size:12px;font-weight:700;color:var(--navy);background:#EEF4FF;border:1px solid #C7D9F5;border-radius:20px;padding:3px 12px">0 selected</span>
+        <button class="btn-download" style="background:#F5921E" onclick="resetSelection()" title="Reset to Top 20 from Selection Intelligence">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
+          Reset Top 20
+        </button>
+        <button class="btn-download" onclick="downloadExcel('rankings')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Excel
+        </button>
+      </div>
     </div>
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
+            <th style="width:38px;text-align:center">Select</th>
             <th>Rank</th>
             <th>ID</th>
             <th>Author</th>
@@ -899,8 +918,8 @@ tbody td { padding: 9px 13px; vertical-align: middle; }
         Selection Equity Analysis
       </div>
       <div class="equity-section-sub">
-        Each bar = <strong>row %</strong> (selection rate within the group). Column figures show each group&apos;s share of <strong>all submissions</strong> vs <strong style="color:#D97706">Top&nbsp;20 selected</strong>.
-        <strong style="color:#991B1B">Red</strong> = rate below 1/1.5 (&asymp;67%) of the leading group (1.5&times; disparity rule). Dashed line = overall rate (14.2% &mdash; 20 of 141).
+        Each bar = <strong>row %</strong> (selection rate within the group &mdash; selected / total in group). Column figures show each group&apos;s share of <strong>all submissions</strong> vs <strong style="color:#D97706">current selection</strong>.
+        <strong style="color:#991B1B">Red</strong> = rate below 1/1.5 (&asymp;67%) of the leading group (1.5&times; disparity rule). Updates live as you check/uncheck abstracts above.
       </div>
     </div>
     <div class="equity-legend">
@@ -950,6 +969,30 @@ const REVIEWER_ALLOC = {"Boni Ale": 33, "BOUDREAUX Chantelle": 33, "MUKARA Kaite
 let tableFiltered = [...ABSTRACTS];
 let tableStateR = { col: 'rank',    dir: 'asc'  };
 let tableStateZ = { col: 'rankSI', dir: 'asc' };
+let selectedSet  = new Set();   // IDs of selected abstracts (pre-filled with top-20)
+
+function initSelection() {
+  // Pre-select the top 20 by adjusted_mean (same logic as Selection Intelligence)
+  const withAdj = ABSTRACTS.filter(a => a.adjusted_mean !== null && a.adjusted_mean !== undefined && a.nb_reviews > 0);
+  const top20ids = [...withAdj].sort((a,b) => (b.adjusted_mean||0) - (a.adjusted_mean||0))
+                               .slice(0, 20).map(a => a.id);
+  selectedSet = new Set(top20ids);
+  updateSelectionBadge();
+}
+function toggleSelection(id, checked) {
+  if (checked) selectedSet.add(id); else selectedSet.delete(id);
+  updateSelectionBadge();
+  renderEquity();
+}
+function resetSelection() {
+  initSelection();
+  renderRankings();
+  renderEquity();
+}
+function updateSelectionBadge() {
+  const el = document.getElementById('selectionBadge');
+  if (el) el.textContent = selectedSet.size + ' selected';
+}
 
 /* ═══ ANIMATED COUNTERS ══════════════════════════════════════════════════════ */
 function animateCounter(el, target, isFloat, duration) {
@@ -1081,7 +1124,14 @@ function sortRows(data, col, dir) {
 /* ═══ RENDER: RANKINGS ═══════════════════════════════════════════════════════ */
 function renderRankings() {
   const data = sortRows(tableFiltered, tableStateR.col, tableStateR.dir);
-  document.getElementById('tbRankings').innerHTML = data.map(a => `<tr>
+  document.getElementById('tbRankings').innerHTML = data.map(a => {
+    const isSel = selectedSet.has(a.id);
+    return `<tr class="${isSel ? 'row-selected' : ''}">
+    <td style="text-align:center;vertical-align:middle">
+      <input type="checkbox" class="sel-checkbox" ${isSel ? 'checked' : ''}
+        onchange="toggleSelection(${a.id}, this.checked); this.closest('tr').classList.toggle('row-selected', this.checked)"
+        title="Select abstract #${a.id} for the programme">
+    </td>
     <td>${rankCell(a.rank)}</td>
     <td><b style="color:var(--muted)">#${a.id}</b></td>
     <td style="font-weight:500;white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis">${a.author}</td>
@@ -1097,7 +1147,8 @@ function renderRankings() {
     <td style="color:var(--muted)">${a.nb_reviews > 0 ? a.max : '-'}</td>
     <td style="color:var(--muted)">${a.nb_reviews > 0 ? a.std : '-'}</td>
     <td><button class="btn-view" onclick="openModal(${a.id})">View</button></td>
-  </tr>`).join('');
+  </tr>`;
+  }).join('');
   const shown = data.filter(a => a.nb_reviews > 0);
   const avgStr = shown.length
     ? (shown.reduce((s, a) => s + a.mean, 0) / shown.length).toFixed(2)
@@ -1531,6 +1582,7 @@ function initCharts() {
 
 /* ═══ INIT ═══════════════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
+  initSelection();
   initCharts();
   renderRankings();
   renderZscore();
@@ -1617,9 +1669,9 @@ function downloadExcel(mode) {
 
 /* ═══ EQUITY ANALYSIS ════════════════════════════════════════════════════════ */
 function renderEquity() {
-  const withAdj = ABSTRACTS.filter(a => a.adjusted_mean !== null && a.adjusted_mean !== undefined && a.nb_reviews > 0);
-  const top20set = new Set([...withAdj].sort((a,b) => b.adjusted_mean - a.adjusted_mean).slice(0,20).map(a=>a.id));
-  const overallRate = top20set.size / ABSTRACTS.length;  // e.g. 20/141
+  // Use the live selectedSet (committee's manual selection)
+  const top20set = selectedSet.size > 0 ? selectedSet : new Set();
+  const overallRate = ABSTRACTS.length > 0 ? top20set.size / ABSTRACTS.length : 0;  // e.g. 20/141
 
   function cleanDomain(d) {
     if (!d) return 'N/A';
