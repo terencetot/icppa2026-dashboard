@@ -1014,7 +1014,7 @@ function pickDoubleConstrained(pool, domMax, langMax, targetSlots) {
 }
 function initSelection() {
   // Final selection manually approved by the organizing committee (30 abstracts).
-  var FINAL_SELECTION_IDS = [59, 64, 115, 41, 49, 123, 107, 65, 43, 117, 126, 11, 21, 144, 108, 63, 120, 124, 5, 58, 40, 121, 106, 89, 47, 111, 129, 100, 26, 54];
+  var FINAL_SELECTION_IDS = [59, 61, 115, 41, 49, 123, 107, 65, 43, 117, 126, 11, 21, 144, 108, 63, 38, 120, 124, 5, 58, 40, 121, 106, 47, 138, 111, 129, 26, 54];
   selectedSet = new Set(FINAL_SELECTION_IDS);
   updateSelectionBadge();
 }
@@ -1251,7 +1251,7 @@ function renderZscore() {
       ? scoreCell(Math.round(a.adjusted_mean * 10) / 10)
       : '<span style="color:var(--muted)">-</span>';
     const recBadge = a.adjZ !== null ? recommendationBadge(a.adjZ) : '<span class="badge badge-slate">-</span>';
-    const isPicked = selectedSet.has(a.id);
+    const isPicked = a.rankSI <= 30;
     const top20class = isPicked ? 'top20-row' : '';
     const rankDisplay = isPicked
       ? `<div class="rank-cell"><div class="rank-num ${a.rankSI<=3?'rank-'+a.rankSI:'rank-n top20-badge'}">${a.rankSI}</div><span class="top20-star" title="Selected for the programme">&#9733;</span></div>`
