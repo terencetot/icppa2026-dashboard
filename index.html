@@ -1387,9 +1387,10 @@ function renderZscore() {
       ? scoreCell(Math.round(a.adjusted_mean * 10) / 10)
       : '<span style="color:var(--muted)">-</span>';
     const recBadge = a.adjZ !== null ? recommendationBadge(a.adjZ) : '<span class="badge badge-slate">-</span>';
-    const top20class = a.rankSI <= 30 ? 'top20-row' : '';
-    const rankDisplay = a.rankSI <= 30
-      ? `<div class="rank-cell"><div class="rank-num ${a.rankSI<=3?'rank-'+a.rankSI:'rank-n top20-badge'}">${a.rankSI}</div>${a.rankSI<=30?'<span class="top20-star">&#9733;</span>':""}</div>`
+    const isPicked = selectedSet.has(a.id);
+    const top20class = isPicked ? 'top20-row' : '';
+    const rankDisplay = isPicked
+      ? `<div class="rank-cell"><div class="rank-num ${a.rankSI<=3?'rank-'+a.rankSI:'rank-n top20-badge'}">${a.rankSI}</div><span class="top20-star" title="Selected for the programme">&#9733;</span></div>`
       : rankCell(a.rankSI);
     return `<tr class="${top20class}">
       <td>${rankDisplay}</td>
